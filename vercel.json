@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm install && ./node_modules/.bin/vite build",
-  "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "npm install"
+  "outputDirectory": "dist"
 }
