@@ -96,6 +96,14 @@ export default function Usuarios() {
   const [filtroRole, setFiltroRole] = useState('')
   const [modal, setModal] = useState(null)
 
+  const excluir = async (id, nome) => {
+    if (!confirm(`Excluir o usuário "${nome}"? Esta ação não pode ser desfeita.`)) return
+    try {
+      await api.delete(`/usuarios/${id}`)
+      carregar()
+    } catch { alert('Erro ao excluir usuário') }
+  }
+
   const carregar = () => {
     setCarregando(true)
     api.get('/usuarios').then(r => setUsuarios(r.data)).catch(console.error).finally(() => setCarregando(false))

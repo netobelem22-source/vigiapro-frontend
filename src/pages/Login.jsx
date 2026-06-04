@@ -103,11 +103,8 @@ export default function Login() {
           </form>
 
           <div style={{ marginTop: '2rem', padding: '1rem', background: '#F9FAFB', borderRadius: 10, border: '1px solid #F3F4F6' }}>
-            <div style={{ fontSize: 11, color: '#9CA3AF', marginBottom: 6, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Acesso de demonstração</div>
             <div style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.8 }}>
-              <div>Gestor: gestor@vigiapro.com</div>
               <div>Gerente: gerente@vigiapro.com</div>
-              <div>Senha: 123456</div>
             </div>
           </div>
         </div>
