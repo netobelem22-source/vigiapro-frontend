@@ -68,7 +68,7 @@ export default function Login() {
       {/* Lado direito — formulário */}
       <div style={{ width: 440, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem', background: '#fff' }}>
         <div style={{ width: '100%', maxWidth: 360 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 6 }}>Bem-vindo</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 6 }}>Bem-vindo(a)</h2>
           <p style={{ fontSize: 13, color: '#888', marginBottom: '2rem' }}>Entre com suas credenciais para acessar o sistema</p>
 
           <form onSubmit={handleSubmit}>
