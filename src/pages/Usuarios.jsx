@@ -192,10 +192,14 @@ export default function Usuarios() {
                       {u.ativo ? 'Ativo' : 'Inativo'}
                     </span>
                   </td>
-                  <td style={{ padding: '12px 16px' }}>
+                  <td style={{ padding: '12px 16px', display: 'flex', gap: 6 }}>
                     <button onClick={() => setModal(u)}
                       style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #ddd', background: '#fff', fontSize: 12, cursor: 'pointer', color: '#555' }}>
                       Editar
+                    </button>
+                    <button onClick={() => excluir(u.id, u.nome)}
+                      style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', fontSize: 12, cursor: 'pointer', color: '#991B1B' }}>
+                      Excluir
                     </button>
                   </td>
                 </tr>
