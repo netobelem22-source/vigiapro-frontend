@@ -16,54 +16,77 @@ const segmentoLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Expansão' }
 const segmentoCor = { LOJA: { bg: '#EEF2FF', color: '#3730A3' }, OBRA: { bg: '#FEF9C3', color: '#854D0E' }, EXPANSAO: { bg: '#F0FDF4', color: '#166534' } }
 
 const ModalLink = ({ pedido, onClose }) => {
-  const [links, setLinks] = useState({ entrada: null, saida: null })
+  const [linksGerados, setLinksGerados] = useState({})
   const [gerando, setGerando] = useState('')
 
-  const gerarLink = async (tipo) => {
+  const totalVigias = pedido.turno === 'DIA' ? (pedido.qtdVigiaDia || 1)
+    : pedido.turno === 'NOITE' ? (pedido.qtdVigiNoite || 1)
+    : (pedido.qtdVigiaDia || 1) + (pedido.qtdVigiNoite || 1)
+
+  const gerarLinks = async (tipo) => {
     setGerando(tipo)
     try {
-      const res = await import('../services/api').then(m => m.default.post('/links/gerar', { pedidoId: pedido.id, tipo }))
-      setLinks(l => ({ ...l, [tipo.toLowerCase()]: res.data.url }))
-    } catch { alert('Erro ao gerar link') }
+      const api = (await import('../services/api')).default
+      const res = await api.post('/links/gerar', { pedidoId: pedido.id, tipo })
+      setLinksGerados(l => ({ ...l, [tipo]: res.data.links }))
+    } catch { alert('Erro ao gerar links') }
     finally { setGerando('') }
   }
 
-  const copiar = (url) => { navigator.clipboard.writeText(url); alert('Link copiado!') }
+  const copiar = (url, num) => {
+    navigator.clipboard.writeText(url)
+    alert(`Link Vigia ${num} copiado!`)
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 500 }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 520, maxHeight: '85vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: 16, fontWeight: 700 }}>Links de ponto</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#999' }}>×</button>
         </div>
-        <div style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.5 }}>
-          Gere links para <strong>{pedido.unidade?.nome}</strong>. O vigia abre o link no celular e bate o ponto com foto e GPS. Válido por 24h.
+        <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
+          <strong>{pedido.unidade?.nome}</strong> — {totalVigias} vaga(s) solicitada(s)
         </div>
+        <div style={{ fontSize: 12, color: '#aaa', marginBottom: 16 }}>
+          Serão gerados {totalVigias} link(s) por tipo — 1 para cada vigia. Cada link só pode ser usado uma vez.
+        </div>
+
         {['ENTRADA', 'SAIDA'].map(tipo => (
-          <div key={tipo} style={{ background: '#F9FAFB', borderRadius: 10, padding: '14px', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: links[tipo.toLowerCase()] ? 10 : 0 }}>
+          <div key={tipo} style={{ background: '#F9FAFB', borderRadius: 10, padding: '14px', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: tipo === 'ENTRADA' ? '#085041' : '#501313' }}>
-                {tipo === 'ENTRADA' ? 'Link de Entrada' : 'Link de Saída'}
+                {tipo === 'ENTRADA' ? 'Links de Entrada' : 'Links de Saída'}
+                <span style={{ fontSize: 11, fontWeight: 400, color: '#888', marginLeft: 6 }}>({totalVigias} link{totalVigias > 1 ? 's' : ''})</span>
               </div>
-              <button onClick={() => gerarLink(tipo)} disabled={gerando === tipo}
+              <button onClick={() => gerarLinks(tipo)} disabled={gerando === tipo}
                 style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: tipo === 'ENTRADA' ? '#0F6E56' : '#E24B4A', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                {gerando === tipo ? 'Gerando...' : 'Gerar link'}
+                {gerando === tipo ? 'Gerando...' : `Gerar ${totalVigias} link${totalVigias > 1 ? 's' : ''}`}
               </button>
             </div>
-            {links[tipo.toLowerCase()] && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                <input readOnly value={links[tipo.toLowerCase()]}
-                  style={{ flex: 1, padding: '7px 10px', borderRadius: 6, border: '1px solid #ddd', fontSize: 12, color: '#555', background: '#fff' }} />
-                <button onClick={() => copiar(links[tipo.toLowerCase()])}
-                  style={{ padding: '7px 12px', borderRadius: 6, border: '1px solid #ddd', background: '#fff', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  Copiar
-                </button>
+
+            {linksGerados[tipo] ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {linksGerados[tipo].map((l, i) => (
+                  <div key={i} style={{ background: '#fff', borderRadius: 8, padding: '10px 12px', border: '1px solid #eee' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 6 }}>
+                      Vigia {l.numeroVaga}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <input readOnly value={l.url}
+                        style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid #ddd', fontSize: 11, color: '#555', background: '#FAFAFA' }} />
+                      <button onClick={() => copiar(l.url, l.numeroVaga)}
+                        style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #ddd', background: '#fff', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        Copiar
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
+            ) : null}
           </div>
         ))}
-        <div style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>Links expiram em 24h após geração. Cada link só pode ser usado uma vez.</div>
+        <div style={{ fontSize: 11, color: '#aaa' }}>Links válidos por 24h. Envie cada link para um vigia diferente.</div>
       </div>
     </div>
   )
@@ -322,8 +345,13 @@ export default function Pedidos() {
                         const prev = new Date(); prev.setHours(h, m + 15, 0)
                         atrasado = agora > prev
                       }
-                      if (temEntrada && temSaida) return <span style={{ background: '#E1F5EE', color: '#085041', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>Completo</span>
-                      if (temEntrada) return <span style={{ background: '#EEF2FF', color: '#3730A3', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>Em serviço</span>
+                      const totalVagas = p.turno === 'DIA' ? (p.qtdVigiaDia||1) : p.turno === 'NOITE' ? (p.qtdVigiNoite||1) : (p.qtdVigiaDia||1)+(p.qtdVigiNoite||1)
+                      const entradas = pontos.filter(pt => pt.tipo === 'ENTRADA').length
+                      const saidas = pontos.filter(pt => pt.tipo === 'SAIDA').length
+                      if (saidas >= totalVagas) return <span style={{ background: '#E1F5EE', color: '#085041', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>Completo</span>
+                      if (saidas > 0 && saidas < totalVagas) return <span style={{ background: '#FEF9C3', color: '#854D0E', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{saidas}/{totalVagas} Parcial</span>
+                      if (entradas >= totalVagas) return <span style={{ background: '#EEF2FF', color: '#3730A3', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>Em serviço</span>
+                      if (entradas > 0 && entradas < totalVagas) return <span style={{ background: '#FEF9C3', color: '#854D0E', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>{entradas}/{totalVagas} Em serviço</span>
                       if (atrasado) return <span style={{ background: '#FCEBEB', color: '#991B1B', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>Ausente</span>
                       return <span style={{ background: '#F3F4F6', color: '#6B7280', padding: '2px 8px', borderRadius: 20, fontSize: 11 }}>Aguardando</span>
                     })()}
