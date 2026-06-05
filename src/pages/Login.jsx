@@ -36,7 +36,7 @@ export default function Login() {
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>VigiaPro</div>
+              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>VigilantePro</div>
               <div style={{ fontSize: 12, opacity: 0.7 }}>gestão de vigilância</div>
             </div>
           </div>
