@@ -45,7 +45,7 @@ export default function Login() {
             Controle total da sua operação de segurança
           </h1>
           <p style={{ fontSize: 14, opacity: 0.75, lineHeight: 1.7, marginBottom: '2rem' }}>
-            Gerencie pedidos de vigias, registros de ponto, relatórios e folha de pagamento em um único lugar.
+            Gerencie pedidos de vigilantes, registros de ponto, relatórios e folha de pagamento em um único lugar.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
