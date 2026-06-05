@@ -91,7 +91,7 @@ export default function NovoPedido() {
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#666', padding: 0 }}>←</button>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Novo pedido</h1>
-          <div style={{ fontSize: 13, color: '#888' }}>Solicitar vigias para uma unidade</div>
+          <div style={{ fontSize: 13, color: '#888' }}>Solicitar vigilantes para uma unidade</div>
         </div>
       </div>
 
@@ -152,7 +152,7 @@ export default function NovoPedido() {
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>{preview.vigiasPorDia}</div>
-                  <div style={{ fontSize: 11, color: '#666' }}>vigias/dia</div>
+                  <div style={{ fontSize: 11, color: '#666' }}>vigilantes/dia</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>{preview.totalDiarias}</div>
@@ -168,7 +168,7 @@ export default function NovoPedido() {
 
         {/* Escala */}
         <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, padding: '1.2rem', marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#111' }}>Escala de vigias</div>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#111' }}>Escala de vigilantes</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
             <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Turno</label>
             <select value={form.turno} onChange={e => set('turno', e.target.value)}
@@ -180,10 +180,10 @@ export default function NovoPedido() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
             {(form.turno === 'DIA' || form.turno === 'AMBOS') && (
-              <>{input('Vigias (dia)', 'qtdVigiaDia', 'number', { min: 0 })}{input('Início turno dia', 'inicioTurnoDia', 'time')}</>
+              <>{input('Vigilantes (dia)', 'qtdVigiaDia', 'number', { min: 0 })}{input('Início turno dia', 'inicioTurnoDia', 'time')}</>
             )}
             {(form.turno === 'NOITE' || form.turno === 'AMBOS') && (
-              <>{input('Vigias (noite)', 'qtdVigiNoite', 'number', { min: 0 })}{input('Início turno noite', 'inicioTurnoNoite', 'time')}</>
+              <>{input('Vigilantes (noite)', 'qtdVigiNoite', 'number', { min: 0 })}{input('Início turno noite', 'inicioTurnoNoite', 'time')}</>
             )}
           </div>
         </div>

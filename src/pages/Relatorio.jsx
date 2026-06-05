@@ -50,7 +50,7 @@ export default function Relatorio() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Relatório mensal</h1>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Resumo de pedidos e vigias escalados</div>
+          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Resumo de pedidos e vigilantes escalados</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <select value={mes} onChange={e => setMes(Number(e.target.value))}

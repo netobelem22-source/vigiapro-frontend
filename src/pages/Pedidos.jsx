@@ -35,7 +35,7 @@ const ModalLink = ({ pedido, onClose }) => {
 
   const copiar = (url, num) => {
     navigator.clipboard.writeText(url)
-    alert(`Link Vigia ${num} copiado!`)
+    alert(`Link Vigilante ${num} copiado!`)
   }
 
   return (
@@ -49,7 +49,7 @@ const ModalLink = ({ pedido, onClose }) => {
           <strong>{pedido.unidade?.nome}</strong> — {totalVigias} vaga(s) solicitada(s)
         </div>
         <div style={{ fontSize: 12, color: '#aaa', marginBottom: 16 }}>
-          Serão gerados {totalVigias} link(s) por tipo — 1 para cada vigia. Cada link só pode ser usado uma vez.
+          Serão gerados {totalVigias} link(s) por tipo — 1 para cada vigilante. Cada link só pode ser usado uma vez.
         </div>
 
         {['ENTRADA', 'SAIDA'].map(tipo => (
@@ -86,7 +86,7 @@ const ModalLink = ({ pedido, onClose }) => {
             ) : null}
           </div>
         ))}
-        <div style={{ fontSize: 11, color: '#aaa' }}>Links válidos por 24h. Envie cada link para um vigia diferente.</div>
+        <div style={{ fontSize: 11, color: '#aaa' }}>Links válidos por 24h. Envie cada link para um vigilante diferente.</div>
       </div>
     </div>
   )
@@ -301,7 +301,7 @@ export default function Pedidos() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
-                {['Unidade', 'Cidade', 'Data', 'Segmento', 'Horário', 'Vigias', 'Pontos', 'Status', 'Ações'].map(h => (
+                {['Unidade', 'Cidade', 'Data', 'Segmento', 'Horário', 'Vigilantes', 'Pontos', 'Status', 'Ações'].map(h => (
                   <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#888', borderBottom: '1px solid #EAECF0' }}>{h}</th>
                 ))}
               </tr>

@@ -58,7 +58,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
 
   const salvar = async () => {
     if (!form.pedidoId) return alert('Selecione um pedido')
-    if (!form.nomeVigia && !form.vigiaId) return alert('Informe o nome do vigia')
+    if (!form.nomeVigia && !form.vigiaId) return alert('Informe o Nome do vigilante')
     setSalvando(true)
     try {
       const pedido = pedidos.find(p => p.id === form.pedidoId)
@@ -103,7 +103,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Nome do vigia</label>
             <input value={form.nomeVigia} onChange={e => set('nomeVigia', e.target.value)}
-              placeholder="Digite o nome do vigia"
+              placeholder="Digite o nome do vigilante"
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
           </div>
 
@@ -126,7 +126,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Observação (opcional)</label>
             <input value={form.observacao} onChange={e => set('observacao', e.target.value)}
-              placeholder="Ex: Vigia esqueceu o celular"
+              placeholder="Ex: Vigilante esqueceu o celular"
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function Pontos() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Pontos</h1>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Registros de entrada e saída dos vigias</div>
+          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Registros de entrada e saída dos vigilantes</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {pendentes > 0 && (
@@ -226,7 +226,7 @@ export default function Pontos() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
-                {['Foto', 'Vigia', 'Unidade', 'Tipo', 'Horário', 'Pontualidade', 'GPS', 'Confirmado por', 'Status', 'Ação'].map(h => (
+                {['Foto', 'Vigilante', 'Unidade', 'Tipo', 'Horário', 'Pontualidade', 'GPS', 'Confirmado por', 'Status', 'Ação'].map(h => (
                   <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: 11, fontWeight: 500, color: '#888', borderBottom: '1px solid #EAECF0' }}>{h}</th>
                 ))}
               </tr>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
 
-const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigia' }
+const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigilante' }
 const roleBadge = {
   GESTOR:  { bg: '#EEEDFE', color: '#26215C' },
   GERENTE: { bg: '#E6F1FB', color: '#185FA5' },
@@ -62,7 +62,7 @@ const Modal = ({ usuario, onClose, onSaved }) => {
               <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Perfil</label>
               <select value={form.role} onChange={e => set('role', e.target.value)}
                 style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
-                <option value="VIGIA">Vigia</option>
+                <option value="VIGIA">Vigilante</option>
                 <option value="GERENTE">Gerente</option>
                 <option value="GESTOR">Gestor</option>
               </select>
