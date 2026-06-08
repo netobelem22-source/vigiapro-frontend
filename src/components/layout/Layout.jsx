@@ -29,7 +29,7 @@ export default function Layout() {
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#0F6E56', lineHeight: 1 }}>VigiaPro</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#0F6E56', lineHeight: 1 }}>VigilantePro</div>
               <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>gestão de vigilância</div>
             </div>
           </div>

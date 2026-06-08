@@ -107,7 +107,7 @@ export default function Dashboard() {
         <Card label="Pedidos hoje" valor={resumo?.totalPedidos ?? 0} sub="solicitações registradas" />
         <Card label="Pendentes" valor={resumo?.pedidosPendentes ?? 0} sub="aguardando confirmação" cor={resumo?.pedidosPendentes > 0 ? '#BA7517' : '#111'} />
         <Card label="vigilantes escalados" valor={resumo?.totalVigias ?? 0} sub={`${resumo?.totalVigiasDia ?? 0} dia · ${resumo?.totalVigiasNoite ?? 0} noite`} />
-        <Card label="Custo estimado hoje" valor={fmt(resumo?.custoEstimado ?? 0)} sub={`R$ ${resumo?.valorDiaria}/diária`} destaque />
+        <Card label="Custo estimado hoje" valor={fmt(resumo?.custoEstimado ?? 0)} sub={`R$ ${resumo?.valorDiaria}/h × 12h por vigilante`} destaque />
       </div>
 
       {/* Cards linha 2 */}
