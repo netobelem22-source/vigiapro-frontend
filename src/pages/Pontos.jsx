@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import api from '../services/api'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 const Badge = ({ status }) => {
   const map = {
@@ -165,7 +166,7 @@ export default function Pontos() {
       .finally(() => setCarregando(false))
   }
 
-  useEffect(() => { carregar() }, [filtroData, filtroStatus])
+  useAutoRefresh(carregar, [filtroData, filtroStatus])
 
   const confirmar = async (id) => {
     try { await api.patch(`/pontos/${id}/confirmar`); carregar() }

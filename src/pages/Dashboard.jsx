@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -48,26 +49,21 @@ export default function Dashboard() {
   const [carregando, setCarregando] = useState(true)
   const navigate = useNavigate()
 
-  useEffect(() => {
+  const carregar = useCallback(() => {
     const hoje = new Date()
     const hojeStr = hoje.toISOString().split('T')[0]
-
-    // Busca últimos 7 dias para o gráfico
-    const promises = []
-    const dias = []
     const labelDia = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-    // Semana atual: começa no domingo desta semana
     const inicioDaSemana = new Date(hoje)
-    inicioDaSemana.setDate(hoje.getDate() - hoje.getDay()) // volta para o domingo
+    inicioDaSemana.setDate(hoje.getDate() - hoje.getDay())
+    const dias = []
+    const promises = []
     for (let i = 0; i <= 6; i++) {
       const d = new Date(inicioDaSemana)
       d.setDate(inicioDaSemana.getDate() + i)
       const str = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-      const ehHoje = d.toDateString() === hoje.toDateString()
-      dias.push({ str, label: labelDia[d.getDay()], hoje: ehHoje })
+      dias.push({ str, label: labelDia[d.getDay()], hoje: d.toDateString() === hoje.toDateString() })
       promises.push(api.get(`/pedidos?data=${str}`))
     }
-
     Promise.all([
       api.get('/dashboard/hoje'),
       api.get(`/pedidos?data=${hojeStr}`),
@@ -75,15 +71,13 @@ export default function Dashboard() {
     ]).then(([r1, r2, ...semana]) => {
       setResumo(r1.data)
       setPedidos(r2.data.slice(0, 8))
-      setPedidosSemana(dias.map((d, i) => ({
-        label: d.label,
-        valor: semana[i].data.length,
-        hoje: d.hoje
-      })))
+      setPedidosSemana(dias.map((d, i) => ({ label: d.label, valor: semana[i].data.length, hoje: d.hoje })))
     })
     .catch(console.error)
     .finally(() => setCarregando(false))
   }, [])
+
+  useAutoRefresh(carregar, [])
 
   const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
 

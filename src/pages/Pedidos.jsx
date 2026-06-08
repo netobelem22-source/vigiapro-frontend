@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../services/api'
+import { useAutoRefresh } from '../hooks/useAutoRefresh'
 
 const Badge = ({ status }) => {
   const map = {
@@ -197,7 +198,7 @@ export default function Pedidos() {
       .finally(() => setCarregando(false))
   }
 
-  useEffect(() => { carregar() }, [filtroData, filtroStatus, filtroCidade, location.key])
+  useAutoRefresh(carregar, [filtroData, filtroStatus, filtroCidade, location.key])
 
   const confirmar = async (id) => {
     try { await api.patch(`/pedidos/${id}/status`, { status: 'CONFIRMADO' }); carregar() }
