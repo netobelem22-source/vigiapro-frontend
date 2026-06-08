@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import api from '../services/api'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
+import Paginacao from '../components/Paginacao'
 
 const Badge = ({ status }) => {
   const map = {
@@ -46,12 +47,13 @@ const ModalManual = ({ onClose, onSalvo }) => {
   useEffect(() => {
     const hoje = new Date().toISOString().split('T')[0]
     Promise.all([
-      api.get(`/pedidos?data=${hoje}&status=CONFIRMADO`),
+      api.get(`/pedidos?data=${hoje}&status=CONFIRMADO&limit=200`),
       api.get('/usuarios').catch(() => ({ data: [] }))
     ]).then(([rp, ru]) => {
-      setPedidos(rp.data)
+      const lista = rp.data.pedidos || []
+      setPedidos(lista)
       setVigias(ru.data.filter(u => u.role === 'VIGIA'))
-      if (rp.data.length > 0) setForm(f => ({ ...f, pedidoId: rp.data[0].id }))
+      if (lista.length > 0) setForm(f => ({ ...f, pedidoId: lista[0].id }))
     })
   }, [])
 
@@ -149,6 +151,10 @@ export default function Pontos() {
   const [carregando, setCarregando] = useState(true)
   const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
   const [filtroStatus, setFiltroStatus] = useState('')
+  const [pagina, setPagina] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [paginas, setPaginas] = useState(1)
+  const paginaRef = useRef(1)
   const [fotoModal, setFotoModal] = useState(null)
   const [modalManual, setModalManual] = useState(false)
 
@@ -156,17 +162,32 @@ export default function Pontos() {
     setCarregando(true)
     const params = new URLSearchParams()
     if (filtroData) params.append('data', filtroData)
+    if (filtroStatus) params.append('status', filtroStatus)
+    params.append('page', paginaRef.current)
+    params.append('limit', 20)
     api.get(`/pontos?${params}`)
       .then(r => {
-        let dados = r.data
-        if (filtroStatus) dados = dados.filter(p => p.status === filtroStatus)
-        setPontos(dados)
+        setPontos(r.data.pontos)
+        setTotal(r.data.total)
+        setPaginas(r.data.paginas)
+        setPagina(r.data.pagina)
       })
       .catch(console.error)
       .finally(() => setCarregando(false))
   }
 
+  // Quando filtros mudam, volta pra página 1
+  useEffect(() => {
+    paginaRef.current = 1
+  }, [filtroData, filtroStatus])
+
   useAutoRefresh(carregar, [filtroData, filtroStatus])
+
+  const irParaPagina = (pg) => {
+    paginaRef.current = pg
+    setPagina(pg)
+    carregar()
+  }
 
   const confirmar = async (id) => {
     try { await api.patch(`/pontos/${id}/confirmar`); carregar() }
@@ -306,6 +327,7 @@ export default function Pontos() {
               ))}
             </tbody>
           </table>
+          <Paginacao pagina={pagina} paginas={paginas} total={total} onChange={irParaPagina} />
         )}
       </div>
 

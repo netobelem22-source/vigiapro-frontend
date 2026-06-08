@@ -16,9 +16,10 @@ export default function Relatorio() {
     const fimStr = fim.toISOString().split('T')[0]
 
     // Busca todos os dias do mês
-    api.get(`/pedidos`)
+    api.get(`/pedidos?limit=500`)
       .then(r => {
-        const filtrados = r.data.filter(p => {
+        const todos = r.data.pedidos || []
+        const filtrados = todos.filter(p => {
           const d = new Date(p.data)
           return d.getMonth() + 1 === mes && d.getFullYear() === ano
         })

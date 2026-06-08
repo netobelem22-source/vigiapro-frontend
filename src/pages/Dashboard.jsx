@@ -66,12 +66,12 @@ export default function Dashboard() {
     }
     Promise.all([
       api.get('/dashboard/hoje'),
-      api.get(`/pedidos?data=${hojeStr}`),
+      api.get(`/pedidos?data=${hojeStr}&limit=8`),
       ...promises
     ]).then(([r1, r2, ...semana]) => {
       setResumo(r1.data)
-      setPedidos(r2.data.slice(0, 8))
-      setPedidosSemana(dias.map((d, i) => ({ label: d.label, valor: semana[i].data.length, hoje: d.hoje })))
+      setPedidos(r2.data.pedidos || [])
+      setPedidosSemana(dias.map((d, i) => ({ label: d.label, valor: semana[i].data.total ?? 0, hoje: d.hoje })))
     })
     .catch(console.error)
     .finally(() => setCarregando(false))

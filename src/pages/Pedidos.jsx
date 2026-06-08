@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../services/api'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
+import Paginacao from '../components/Paginacao'
 
 const Badge = ({ status }) => {
   const map = {
@@ -178,6 +179,10 @@ export default function Pedidos() {
   const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
   const [filtroStatus, setFiltroStatus] = useState('')
   const [filtroCidade, setFiltroCidade] = useState('')
+  const [pagina, setPagina] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [paginas, setPaginas] = useState(1)
+  const paginaRef = useRef(1)
   const [modalCancelar, setModalCancelar] = useState(null)
   const [modalLink, setModalLink] = useState(null)
   const [modalHistorico, setModalHistorico] = useState(null)
@@ -192,13 +197,31 @@ export default function Pedidos() {
     if (filtroData) params.append('data', filtroData)
     if (filtroStatus) params.append('status', filtroStatus)
     if (filtroCidade) params.append('cidade', filtroCidade)
+    params.append('page', paginaRef.current)
+    params.append('limit', 20)
     api.get(`/pedidos?${params}`)
-      .then(r => setPedidos(r.data))
+      .then(r => {
+        setPedidos(r.data.pedidos)
+        setTotal(r.data.total)
+        setPaginas(r.data.paginas)
+        setPagina(r.data.pagina)
+      })
       .catch(console.error)
       .finally(() => setCarregando(false))
   }
 
+  // Quando filtros mudam, volta pra página 1
+  useEffect(() => {
+    paginaRef.current = 1
+  }, [filtroData, filtroStatus, filtroCidade, location.key])
+
   useAutoRefresh(carregar, [filtroData, filtroStatus, filtroCidade, location.key])
+
+  const irParaPagina = (pg) => {
+    paginaRef.current = pg
+    setPagina(pg)
+    carregar()
+  }
 
   const confirmar = async (id) => {
     try { await api.patch(`/pedidos/${id}/status`, { status: 'CONFIRMADO' }); carregar() }
@@ -391,6 +414,7 @@ export default function Pedidos() {
               ))}
             </tbody>
           </table>
+          <Paginacao pagina={pagina} paginas={paginas} total={total} onChange={irParaPagina} />
         )}
       </div>
 
