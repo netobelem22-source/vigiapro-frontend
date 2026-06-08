@@ -311,7 +311,10 @@ export default function Pedidos() {
                 <tr key={p.id} style={{ borderBottom: '1px solid #F5F6FA', opacity: p.status === 'CANCELADO' ? 0.5 : 1 }}
                   onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <td style={{ padding: '11px 14px', fontWeight: 500 }}>{p.unidade?.nome}</td>
+                  <td style={{ padding: '11px 14px' }}>
+                    <div style={{ fontWeight: 500 }}>{p.unidade?.nome}</div>
+                    {p.observacao && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{p.observacao}</div>}
+                  </td>
                   <td style={{ padding: '11px 14px', color: '#666' }}>{p.unidade?.cidade}</td>
                   <td style={{ padding: '11px 14px', color: '#666' }}>{new Date(p.data).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
                   <td style={{ padding: '11px 14px' }}>

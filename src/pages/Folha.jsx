@@ -63,7 +63,7 @@ const TabelaUnidades = ({ linhas, expandido, setExpandido, offset = 0 }) => (
                     <tbody>
                       {l.detalhes.map((d, j) => (
                         <tr key={j} style={{ borderBottom: '1px solid #F0F0F0' }}>
-                          <td style={{ padding: '7px 10px', color: '#555' }}>{d.Vigilante}</td>
+                          <td style={{ padding: '7px 10px', color: '#555' }}>{d.vigia}</td>
                           <td style={{ padding: '7px 10px', color: '#555' }}>{new Date(d.data + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                           <td style={{ padding: '7px 10px', color: '#555' }}>{d.entrada}</td>
                           <td style={{ padding: '7px 10px', color: '#555' }}>{d.saida}</td>
