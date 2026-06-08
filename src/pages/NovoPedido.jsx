@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 
+const calcFim = (inicio) => {
+  if (!inicio) return ''
+  const [h, m] = inicio.split(':').map(Number)
+  const totalMin = h * 60 + m + 12 * 60
+  const fimH = Math.floor(totalMin / 60) % 24
+  const fimM = totalMin % 60
+  return `${String(fimH).padStart(2, '0')}:${String(fimM).padStart(2, '0')}`
+}
+
 export default function NovoPedido() {
   const [unidades, setUnidades] = useState([])
   const [form, setForm] = useState({
@@ -11,11 +20,13 @@ export default function NovoPedido() {
     dataFim: new Date().toISOString().split('T')[0],
     usarPeriodo: false,
     segmento: 'LOJA',
-    turno: 'AMBOS',
+    turno: 'NOITE',
     qtdVigiaDia: 1,
     qtdVigiNoite: 1,
     inicioTurnoDia: '07:00',
     inicioTurnoNoite: '19:00',
+    fimTurnoDia: '19:00',
+    fimTurnoNoite: '07:00',
     observacao: ''
   })
   const [salvando, setSalvando] = useState(false)
@@ -34,6 +45,15 @@ export default function NovoPedido() {
 
   const set = (campo, valor) => setForm(f => ({ ...f, [campo]: valor }))
 
+  // Auto-calcula horário de término ao mudar o início
+  useEffect(() => {
+    set('fimTurnoDia', calcFim(form.inicioTurnoDia))
+  }, [form.inicioTurnoDia])
+
+  useEffect(() => {
+    set('fimTurnoNoite', calcFim(form.inicioTurnoNoite))
+  }, [form.inicioTurnoNoite])
+
   // Calcula preview de dias ao mudar datas
   useEffect(() => {
     if (!form.usarPeriodo) { setPreview(null); return }
@@ -42,9 +62,9 @@ export default function NovoPedido() {
     const fim = new Date(form.dataFim + 'T12:00:00')
     if (fim < inicio) { setPreview(null); return }
     const dias = Math.round((fim - inicio) / (1000 * 60 * 60 * 24)) + 1
-    const vigiasPorDia = (form.turno === 'DIA' ? parseInt(form.qtdVigiaDia) || 0 : 0) +
-                         (form.turno === 'NOITE' ? parseInt(form.qtdVigiNoite) || 0 : 0) +
-                         (form.turno === 'AMBOS' ? (parseInt(form.qtdVigiaDia) || 0) + (parseInt(form.qtdVigiNoite) || 0) : 0)
+    const vigiasPorDia = form.turno === 'DIA'
+      ? (parseInt(form.qtdVigiaDia) || 0)
+      : (parseInt(form.qtdVigiNoite) || 0)
     setPreview({ dias, vigiasPorDia, totalDiarias: dias * vigiasPorDia })
   }, [form.dataInicio, form.dataFim, form.usarPeriodo, form.turno, form.qtdVigiaDia, form.qtdVigiNoite])
 
@@ -60,10 +80,12 @@ export default function NovoPedido() {
         dataInicio: form.dataInicio,
         dataFim: form.usarPeriodo ? form.dataFim : form.dataInicio,
         turno: form.turno,
-        qtdVigiaDia: form.qtdVigiaDia,
-        qtdVigiNoite: form.qtdVigiNoite,
-        inicioTurnoDia: form.inicioTurnoDia,
-        inicioTurnoNoite: form.inicioTurnoNoite,
+        qtdVigiaDia: form.turno === 'DIA' ? form.qtdVigiaDia : 0,
+        qtdVigiNoite: form.turno === 'NOITE' ? form.qtdVigiNoite : 0,
+        inicioTurnoDia: form.turno === 'DIA' ? form.inicioTurnoDia : null,
+        inicioTurnoNoite: form.turno === 'NOITE' ? form.inicioTurnoNoite : null,
+        fimTurnoDia: form.turno === 'DIA' ? form.fimTurnoDia : null,
+        fimTurnoNoite: form.turno === 'NOITE' ? form.fimTurnoNoite : null,
         observacao: form.observacao,
         unidadeId: form.unidadeId
       }
@@ -83,6 +105,10 @@ export default function NovoPedido() {
         style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} {...props} />
     </div>
   )
+
+  const fimAtual = form.turno === 'DIA' ? form.fimTurnoDia : form.fimTurnoNoite
+  const inicioAtual = form.turno === 'DIA' ? form.inicioTurnoDia : form.inicioTurnoNoite
+  const atravessaMeiaNoite = fimAtual && inicioAtual && fimAtual <= inicioAtual
 
   return (
     <div style={{ maxWidth: 640 }}>
@@ -141,7 +167,6 @@ export default function NovoPedido() {
             {form.usarPeriodo && input('Data fim', 'dataFim', 'date', { min: form.dataInicio })}
           </div>
 
-          {/* Preview do período */}
           {form.usarPeriodo && preview && (
             <div style={{ marginTop: 12, background: '#E8F5F1', border: '1px solid #9FE1CB', borderRadius: 10, padding: '12px 14px' }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#085041', marginBottom: 6 }}>Resumo do período</div>
@@ -169,22 +194,49 @@ export default function NovoPedido() {
         {/* Escala */}
         <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, padding: '1.2rem', marginBottom: 12 }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#111' }}>Escala de vigilantes</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 16 }}>
             <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Turno</label>
-            <select value={form.turno} onChange={e => set('turno', e.target.value)}
-              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
-              <option value="AMBOS">Dia e Noite</option>
-              <option value="DIA">Somente Dia</option>
-              <option value="NOITE">Somente Noite</option>
-            </select>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {[
+                { value: 'NOITE', label: 'Somente Noite' },
+                { value: 'DIA', label: 'Somente Dia' }
+              ].map(t => (
+                <button key={t.value} type="button"
+                  onClick={() => set('turno', t.value)}
+                  style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${form.turno === t.value ? '#0F6E56' : '#ddd'}`, background: form.turno === t.value ? '#E8F5F1' : '#fff', color: form.turno === t.value ? '#0F6E56' : '#555', fontSize: 13, fontWeight: form.turno === t.value ? 600 : 400, cursor: 'pointer' }}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-            {(form.turno === 'DIA' || form.turno === 'AMBOS') && (
-              <>{input('Vigilantes (dia)', 'qtdVigiaDia', 'number', { min: 0 })}{input('Início turno dia', 'inicioTurnoDia', 'time')}</>
-            )}
-            {(form.turno === 'NOITE' || form.turno === 'AMBOS') && (
-              <>{input('Vigilantes (noite)', 'qtdVigiNoite', 'number', { min: 0 })}{input('Início turno noite', 'inicioTurnoNoite', 'time')}</>
-            )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            {/* Quantidade */}
+            {input('Vigilantes', form.turno === 'DIA' ? 'qtdVigiaDia' : 'qtdVigiNoite', 'number', { min: 1 })}
+
+            {/* Horário início */}
+            {form.turno === 'DIA'
+              ? input('Início do turno', 'inicioTurnoDia', 'time')
+              : input('Início do turno', 'inicioTurnoNoite', 'time')
+            }
+
+            {/* Horário fim — calculado automaticamente */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>
+                Término {atravessaMeiaNoite ? '(+1 dia)' : ''}
+              </label>
+              <input type="time"
+                value={fimAtual}
+                readOnly
+                style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, background: '#F9FAFB', color: '#555', cursor: 'default' }} />
+            </div>
+          </div>
+
+          {/* Info 12h */}
+          <div style={{ marginTop: 12, background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>
+            Cada vigilante trabalha <strong>12 horas fixas</strong> neste turno —
+            das <strong>{form.turno === 'DIA' ? form.inicioTurnoDia : form.inicioTurnoNoite}</strong> às <strong>{fimAtual}</strong>{atravessaMeiaNoite ? ' do dia seguinte' : ''}.
           </div>
         </div>
 

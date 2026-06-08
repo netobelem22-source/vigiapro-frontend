@@ -197,7 +197,7 @@ export default function Pedidos() {
       .finally(() => setCarregando(false))
   }
 
-  useEffect(() => { carregar() }, [filtroData, filtroStatus, filtroCidade])
+  useEffect(() => { carregar() }, [filtroData, filtroStatus, filtroCidade, location.key])
 
   const confirmar = async (id) => {
     try { await api.patch(`/pedidos/${id}/status`, { status: 'CONFIRMADO' }); carregar() }
