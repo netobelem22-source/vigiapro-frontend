@@ -323,6 +323,7 @@ export default function Pedidos() {
             <span style={{ color: '#0F6E56', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/pedidos/novo')}>Criar pedido</span>
           </div>
         ) : (
+          <>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
@@ -416,6 +417,7 @@ export default function Pedidos() {
             </tbody>
           </table>
           <Paginacao pagina={pagina} paginas={paginas} total={total} onChange={irParaPagina} />
+          </>
         )}
       </div>
 

@@ -246,6 +246,7 @@ export default function Pontos() {
         ) : pontos.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#999', fontSize: 14 }}>Nenhum registro encontrado.</div>
         ) : (
+          <>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
@@ -329,6 +330,7 @@ export default function Pontos() {
             </tbody>
           </table>
           <Paginacao pagina={pagina} paginas={paginas} total={total} onChange={irParaPagina} />
+          </>
         )}
       </div>
 
