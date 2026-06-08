@@ -111,7 +111,6 @@ export default function Folha() {
         setDadosTodos(r.data)
         setDadosPorSegmento({})
       } else {
-        // Busca todos os segmentos em paralelo
         const [todos, loja, obra, expansao] = await Promise.all([
           api.get(`/faturamento?mes=${mes}&ano=${ano}`),
           api.get(`/faturamento?mes=${mes}&ano=${ano}&segmento=LOJA`),
@@ -128,21 +127,42 @@ export default function Folha() {
   useEffect(() => { carregar() }, [mes, ano, filtroSegmento])
 
   const exportarCSV = () => {
-    if (!dadosTodos) return
-    const linhas = [
-      [`Folha de Pagamento — ${meses[mes-1]} ${ano}`],
+    if (!dadosTodos?.linhas) return
+    const titulo = filtroSegmento !== 'TODOS'
+      ? `Folha de Pagamento - ${meses[mes-1]} ${ano} - ${segLabel[filtroSegmento]}`
+      : `Folha de Pagamento - ${meses[mes-1]} ${ano}`
+    const rows = [
+      [titulo],
       [],
-      ['Segmento', 'Unidade', 'CNPJ', 'Cidade', 'Valor/hora', 'Registros', 'Total horas', 'Valor total'],
-      ...segmentos.flatMap(seg => {
-        const d = dadosPorSegmento[seg]
-        if (!d?.linhas?.length) return []
-        return d.linhas.map(l => [segLabel[seg], l.unidade, l.cnpj || '', l.cidade, l.valorHora.toFixed(2), l.registros, l.totalHoras, l.valorTotal.toFixed(2)])
-      }),
-      [],
-      ['TOTAL', '', '', '', '', dadosTodos?.totais?.registros || 0, dadosTodos?.totais?.totalHoras || 0, dadosTodos?.totais?.valorTotal?.toFixed(2) || 0]
+      ['Unidade', 'CNPJ', 'Cidade', 'Segmento', 'Vigilante', 'Data', 'Entrada', 'Saida', 'Horas', 'Valor/hora', 'Valor'],
     ]
-    const csv = linhas.map(l => l.join(';')).join('\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    for (const l of dadosTodos.linhas) {
+      for (const d of (l.detalhes || [])) {
+        rows.push([
+          l.unidade || '',
+          l.cnpj || '',
+          l.cidade || '',
+          d.segmento ? (segLabel[d.segmento] || d.segmento) : '',
+          d.vigia || '',
+          d.data ? new Date(d.data + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '',
+          d.entrada || '',
+          d.saida || '',
+          d.horas.toFixed(2).replace('.', ','),
+          l.valorHora.toFixed(2).replace('.', ','),
+          d.valor.toFixed(2).replace('.', ','),
+        ])
+      }
+    }
+    rows.push([])
+    rows.push([
+      'TOTAL', '', '', '', '', '', '', '',
+      (dadosTodos.totais?.totalHoras || 0).toFixed(2).replace('.', ','),
+      '',
+      (dadosTodos.totais?.valorTotal || 0).toFixed(2).replace('.', ','),
+    ])
+    const bom = '﻿'
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n')
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -207,7 +227,6 @@ export default function Folha() {
       {carregando ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: '#999', background: '#fff', borderRadius: 12, border: '1px solid #EAECF0' }}>Carregando...</div>
       ) : filtroSegmento !== 'TODOS' ? (
-        // Modo filtro único
         <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid #EAECF0', fontSize: 14, fontWeight: 600, color: '#111' }}>
             {segLabel[filtroSegmento]} — {meses[mes-1]} {ano}
@@ -219,7 +238,6 @@ export default function Folha() {
           )}
         </div>
       ) : (
-        // Modo todos os segmentos — separado por bloco
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {segmentos.map((seg, si) => {
             const d = dadosPorSegmento[seg]
