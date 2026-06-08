@@ -153,7 +153,7 @@ export default function Dashboard() {
             <tbody>
               {pedidos.map(p => {
                 const vigias = (p.qtdVigiaDia || 0) + (p.qtdVigiNoite || 0)
-                const custo = vigias * (resumo?.valorDiaria || 180)
+                const custo = vigias * 12 * (resumo?.valorDiaria || 180)
                 return (
                   <tr key={p.id} style={{ borderBottom: '1px solid #F5F6FA' }}
                     onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
