@@ -140,7 +140,8 @@ export default function Usuarios() {
   const excluir = async (id, nome) => {
     if (!confirm(`Excluir o usuário "${nome}"? Esta ação não pode ser desfeita.`)) return
     try {
-      await api.delete(`/usuarios/${id}`)
+      const { data } = await api.delete(`/usuarios/${id}`)
+      if (!data.excluido) alert(data.motivo || 'Usuário tinha histórico no sistema e foi desativado em vez de excluído.')
       carregar()
     } catch { alert('Erro ao excluir usuário') }
   }
