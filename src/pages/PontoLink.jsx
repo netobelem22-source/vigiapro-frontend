@@ -72,7 +72,7 @@ export default function PontoLink() {
       })
       setEtapa('sucesso')
     } catch (err) {
-      setErro(err.response?.data?.erro || 'Erro ao registrar ponto')
+      setErro(err.response?.data?.erro || 'Erro ao registrar check-in')
       setEtapa('erro')
     }
   }
@@ -124,7 +124,7 @@ export default function PontoLink() {
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: '#111', marginBottom: 8, textAlign: 'center' }}>Ponto registrado com sucesso!</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: '#111', marginBottom: 8, textAlign: 'center' }}>Check-in registrado com sucesso!</div>
         <div style={{ fontSize: 14, color: '#666', textAlign: 'center', lineHeight: 1.6 }}>
           {labelTipo} registrada às {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.{'\n'}
           Aguarde confirmação do gerente.
@@ -147,7 +147,7 @@ export default function PontoLink() {
 
   if (etapa === 'gps' || etapa === 'enviando') return (
     <div style={{ ...s.container, alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ fontSize: 14, color: '#888' }}>{etapa === 'gps' ? 'Capturando localização...' : 'Registrando ponto...'}</div>
+      <div style={{ fontSize: 14, color: '#888' }}>{etapa === 'gps' ? 'Capturando localização...' : 'Registrando check-in...'}</div>
     </div>
   )
 

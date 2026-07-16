@@ -106,8 +106,8 @@ export default function Dashboard() {
 
       {/* Cards linha 2 */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-        <Card label="Pontos registrados" valor={resumo?.totalPontos ?? 0} sub="entradas e saídas" />
-        <Card label="Pontos abertos" valor={resumo?.pontosAbertos ?? 0} sub="aguardando confirmação" cor={resumo?.pontosAbertos > 0 ? '#E24B4A' : '#111'} />
+        <Card label="Check-ins registrados" valor={resumo?.totalPontos ?? 0} sub="entradas e saídas" />
+        <Card label="Check-ins abertos" valor={resumo?.pontosAbertos ?? 0} sub="aguardando confirmação" cor={resumo?.pontosAbertos > 0 ? '#E24B4A' : '#111'} />
         <Card label="Unidades ativas" valor={resumo?.totalUnidades ?? 0} sub="cadastradas no sistema" />
 
         {/* Gráfico 7 dias */}

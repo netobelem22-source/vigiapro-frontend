@@ -44,7 +44,7 @@ const ModalLink = ({ pedido, onClose }) => {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 520, maxHeight: '85vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700 }}>Links de ponto</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700 }}>Links de check-in</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#999' }}>×</button>
         </div>
         <div style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
@@ -327,7 +327,7 @@ export default function Pedidos() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
-                {['Unidade', 'Cidade', 'Data', 'Segmento', 'Horário', 'Vigilantes', 'Pontos', 'Status', 'Ações'].map(h => (
+                {['Unidade', 'Cidade', 'Data', 'Segmento', 'Horário', 'Vigilantes', 'Check-in', 'Status', 'Ações'].map(h => (
                   <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: '#888', borderBottom: '1px solid #EAECF0' }}>{h}</th>
                 ))}
               </tr>
@@ -403,7 +403,7 @@ export default function Pedidos() {
                       {p.status === 'CONFIRMADO' && (
                         <button onClick={() => setModalLink(p)}
                           style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #C7D2FE', background: '#EEF2FF', color: '#3730A3', fontSize: 12, cursor: 'pointer' }}>
-                          Link ponto
+                          Link check-in
                         </button>
                       )}
                       <button onClick={() => setModalHistorico(p.id)}

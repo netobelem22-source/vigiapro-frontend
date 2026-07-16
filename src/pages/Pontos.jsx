@@ -77,7 +77,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
       })
       onSalvo()
     } catch (err) {
-      alert(err.response?.data?.erro || 'Erro ao registrar ponto')
+      alert(err.response?.data?.erro || 'Erro ao registrar check-in')
     } finally { setSalvando(false) }
   }
 
@@ -85,7 +85,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 480 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700 }}>Registrar ponto manual</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 700 }}>Registrar check-in manual</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#999' }}>×</button>
         </div>
 
@@ -138,7 +138,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
           <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           <button onClick={salvar} disabled={salvando}
             style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#0F6E56', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {salvando ? 'Registrando...' : 'Registrar ponto'}
+            {salvando ? 'Registrando...' : 'Registrar check-in'}
           </button>
         </div>
       </div>
@@ -192,7 +192,7 @@ export default function Pontos() {
 
   const confirmar = async (id) => {
     try { await api.patch(`/pontos/${id}/confirmar`); carregar() }
-    catch { alert('Erro ao confirmar ponto') }
+    catch { alert('Erro ao confirmar check-in') }
   }
 
   const pendentes = pontos.filter(p => p.status === 'ABERTO').length
@@ -201,7 +201,7 @@ export default function Pontos() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Pontos</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Check-in</h1>
           <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Registros de entrada e saída dos vigilantes</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

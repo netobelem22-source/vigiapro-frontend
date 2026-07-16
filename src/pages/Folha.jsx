@@ -178,7 +178,7 @@ export default function Folha() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Folha de pagamento</h1>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Calculado por horas trabalhadas — pontos confirmados</div>
+          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Calculado por horas trabalhadas — check-ins confirmados</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <select value={mes} onChange={e => setMes(Number(e.target.value))}
@@ -211,7 +211,7 @@ export default function Folha() {
       {/* Cards resumo */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
         {[
-          { label: 'Registros de ponto', valor: totais.registros, sub: 'pares entrada/saída confirmados' },
+          { label: 'Registros de check-in', valor: totais.registros, sub: 'pares entrada/saída confirmados' },
           { label: 'Total horas', valor: fmtH(totais.totalHoras), sub: 'horas trabalhadas no mês' },
           { label: 'Unidades', valor: dadosTodos?.linhas?.length || 0, sub: 'com registros no período' },
           { label: 'Valor total', valor: fmt(totais.valorTotal), sub: 'a faturar no mês', destaque: true },
