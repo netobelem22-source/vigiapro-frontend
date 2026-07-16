@@ -8,7 +8,7 @@ const Badge = ({ status }) => {
   const map = {
     CONFIRMADO: { bg: '#E1F5EE', color: '#085041', label: 'Confirmado' },
     PENDENTE:   { bg: '#FAEEDA', color: '#633806', label: 'Pendente' },
-    CANCELADO:  { bg: '#FCEBEB', color: '#501313', label: 'Cancelado' },
+    CANCELADO:  { bg: '#FCEBEB', color: '#501313', label: 'Recusado' },
   }
   const s = map[status] || map.PENDENTE
   return <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>{s.label}</span>
@@ -96,28 +96,36 @@ const ModalLink = ({ pedido, onClose }) => {
 
 const ModalCancelar = ({ pedido, onClose, onCancelado }) => {
   const [salvando, setSalvando] = useState(false)
+  const [motivo, setMotivo] = useState('')
   const confirmar = async () => {
     setSalvando(true)
     try {
-      await api.patch(`/pedidos/${pedido.id}/status`, { status: 'CANCELADO' })
+      await api.patch(`/pedidos/${pedido.id}/status`, { status: 'CANCELADO', motivo })
       onCancelado()
-    } catch { alert('Erro ao cancelar pedido') }
+    } catch { alert('Erro ao recusar pedido') }
     finally { setSalvando(false) }
   }
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 440 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Cancelar pedido</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Recusar pedido</h2>
         <p style={{ fontSize: 13, color: '#666', marginBottom: 12, lineHeight: 1.5 }}>
-          Cancelar o pedido de <strong>{pedido.unidade?.nome}</strong> do dia <strong>{new Date(pedido.data).toLocaleDateString('pt-BR')}</strong>?
+          Recusar o pedido de <strong>{pedido.unidade?.nome}</strong> do dia <strong>{new Date(pedido.data).toLocaleDateString('pt-BR')}</strong>?
         </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Motivo da recusa</label>
+          <textarea value={motivo} onChange={e => setMotivo(e.target.value)} rows={3}
+            placeholder="Explique o motivo da recusa"
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, resize: 'vertical', fontFamily: 'inherit' }} />
+        </div>
         <div style={{ background: '#FFF8F0', border: '1px solid #FAC775', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#633806' }}>
-          Pedidos cancelados não entram no cálculo da folha de pagamento.
+          Pedidos recusados não entram no cálculo da folha de pagamento.
         </div>
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#666' }}>Voltar</button>
-          <button onClick={confirmar} disabled={salvando} style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#E24B4A', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {salvando ? 'Cancelando...' : 'Confirmar cancelamento'}
+          <button onClick={confirmar} disabled={salvando || motivo.trim().length < 3}
+            style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: motivo.trim().length < 3 ? '#F3A6A5' : '#E24B4A', color: '#fff', fontSize: 13, fontWeight: 600, cursor: motivo.trim().length < 3 ? 'not-allowed' : 'pointer' }}>
+            {salvando ? 'Recusando...' : 'Confirmar recusa'}
           </button>
         </div>
       </div>
@@ -136,6 +144,7 @@ const ModalHistorico = ({ pedidoId, onClose }) => {
   }, [pedidoId])
 
   const acaoCor = { CRIADO: '#0F6E56', CONFIRMADO: '#085041', CANCELADO: '#E24B4A', PENDENTE: '#BA7517' }
+  const acaoLabel = { CRIADO: 'CRIADO', CONFIRMADO: 'CONFIRMADO', CANCELADO: 'RECUSADO', PENDENTE: 'PENDENTE' }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
@@ -158,7 +167,7 @@ const ModalHistorico = ({ pedidoId, onClose }) => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: acaoCor[h.acao] || '#111' }}>{h.acao}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: acaoCor[h.acao] || '#111' }}>{acaoLabel[h.acao] || h.acao}</span>
                     <span style={{ fontSize: 11, color: '#aaa' }}>{new Date(h.criadoEm).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <div style={{ fontSize: 12, color: '#666', marginTop: 2 }}>{h.detalhe}</div>
@@ -302,7 +311,7 @@ export default function Pedidos() {
             <option value="">Todos</option>
             <option value="PENDENTE">Pendente</option>
             <option value="CONFIRMADO">Confirmado</option>
-            <option value="CANCELADO">Cancelado</option>
+            <option value="CANCELADO">Recusado</option>
           </select>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -397,7 +406,7 @@ export default function Pedidos() {
                       {p.status !== 'CANCELADO' && (
                         <button onClick={() => setModalCancelar(p)}
                           style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #FCA5A5', background: '#FEF2F2', color: '#991B1B', fontSize: 12, cursor: 'pointer' }}>
-                          Cancelar
+                          Recusar
                         </button>
                       )}
                       {p.status === 'CONFIRMADO' && (
