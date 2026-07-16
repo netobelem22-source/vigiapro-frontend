@@ -36,10 +36,11 @@ export default function NovoPedido() {
   const { usuario } = useAuth()
 
   useEffect(() => {
-    api.get('/unidades').then(r => {
-      setUnidades(r.data)
+    api.get('/unidades?limit=1000').then(r => {
+      const lista = r.data.unidades || []
+      setUnidades(lista)
       if (usuario?.unidadeId) setForm(f => ({ ...f, unidadeId: usuario.unidadeId }))
-      else if (r.data.length > 0) setForm(f => ({ ...f, unidadeId: r.data[0].id }))
+      else if (lista.length > 0) setForm(f => ({ ...f, unidadeId: lista[0].id }))
     })
   }, [])
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../services/api'
+import Paginacao from '../components/Paginacao'
 
 const ModalValorGlobal = ({ onClose, onSalvo }) => {
   const [valor, setValor] = useState('')
@@ -9,8 +10,8 @@ const ModalValorGlobal = ({ onClose, onSalvo }) => {
     if (!valor || parseFloat(valor) <= 0) return alert('Informe um valor válido')
     setSalvando(true)
     try {
-      const res = await api.get('/unidades')
-      await Promise.all(res.data.map(u => api.put(`/unidades/${u.id}`, { ...u, valorDiaria: parseFloat(valor) })))
+      const res = await api.get('/unidades?limit=1000')
+      await Promise.all((res.data.unidades || []).map(u => api.put(`/unidades/${u.id}`, { ...u, valorDiaria: parseFloat(valor) })))
       await api.put('/configuracao', { valorDiaria: parseFloat(valor) })
       onSalvo()
     } catch { alert('Erro ao atualizar valores') }
@@ -213,30 +214,60 @@ export default function Unidades() {
   const [unidades, setUnidades] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [busca, setBusca] = useState('')
+  const [buscaAtiva, setBuscaAtiva] = useState('')
   const [modal, setModal] = useState(null)
   const [modalGlobal, setModalGlobal] = useState(false)
+  const [pagina, setPagina] = useState(1)
+  const [paginas, setPaginas] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [stats, setStats] = useState({ totalUnidades: 0, totalCidades: 0, semValor: 0 })
+  const paginaRef = useRef(1)
 
   const carregar = () => {
     setCarregando(true)
-    api.get('/unidades').then(r => setUnidades(r.data)).catch(console.error).finally(() => setCarregando(false))
+    const params = new URLSearchParams()
+    if (buscaAtiva) params.append('busca', buscaAtiva)
+    params.append('page', paginaRef.current)
+    params.append('limit', 24)
+    api.get(`/unidades?${params}`)
+      .then(r => {
+        setUnidades(r.data.unidades || [])
+        setTotal(r.data.total ?? 0)
+        setPaginas(r.data.paginas ?? 1)
+        setPagina(r.data.pagina ?? 1)
+        if (r.data.totalUnidades !== undefined) {
+          setStats({ totalUnidades: r.data.totalUnidades, totalCidades: r.data.totalCidades, semValor: r.data.semValor })
+        }
+      })
+      .catch(console.error)
+      .finally(() => setCarregando(false))
   }
 
-  useEffect(() => { carregar() }, [])
+  // Debounce da busca: espera 350ms sem digitar antes de consultar o servidor
+  useEffect(() => {
+    const t = setTimeout(() => {
+      paginaRef.current = 1
+      setBuscaAtiva(busca)
+    }, 350)
+    return () => clearTimeout(t)
+  }, [busca])
 
-  const filtradas = unidades.filter(u =>
-    u.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    u.cidade.toLowerCase().includes(busca.toLowerCase())
-  )
+  useEffect(() => { carregar() }, [buscaAtiva])
 
-  const cidades = [...new Set(unidades.map(u => u.cidade))].sort()
-  const semValor = unidades.filter(u => !u.valorDiaria).length
+  const irParaPagina = (pg) => {
+    paginaRef.current = pg
+    setPagina(pg)
+    carregar()
+  }
+
+  const { totalUnidades, totalCidades, semValor } = stats
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Unidades</h1>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{unidades.length} unidades em {cidades.length} cidades</div>
+          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{totalUnidades} unidades em {totalCidades} cidades</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setModalGlobal(true)}
@@ -264,13 +295,14 @@ export default function Unidades() {
 
       {carregando ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: '#999' }}>Carregando...</div>
-      ) : filtradas.length === 0 ? (
+      ) : unidades.length === 0 ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: '#999', background: '#fff', borderRadius: 12, border: '1px solid #eee' }}>
           {busca ? 'Nenhuma unidade encontrada.' : <>Nenhuma unidade cadastrada.{' '}<span style={{ color: '#0F6E56', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setModal('novo')}>Cadastrar agora</span></>}
         </div>
       ) : (
+        <>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-          {filtradas.map(u => (
+          {unidades.map(u => (
             <div key={u.id} onClick={() => setModal(u)}
               onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'}
               onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
@@ -303,6 +335,10 @@ export default function Unidades() {
             </div>
           ))}
         </div>
+        <div style={{ background: '#fff', border: '1px solid #EAECF0', borderTop: 'none', borderRadius: '0 0 12px 12px', marginTop: -1 }}>
+          <Paginacao pagina={pagina} paginas={paginas} total={total} onChange={irParaPagina} />
+        </div>
+        </>
       )}
 
       {modal && <Modal unidade={modal === 'novo' ? null : modal} onClose={() => setModal(null)} onSaved={() => { setModal(null); carregar() }} />}

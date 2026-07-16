@@ -17,7 +17,7 @@ const Modal = ({ usuario, onClose, onSaved }) => {
   const [erro, setErro] = useState('')
 
   useEffect(() => {
-    api.get('/unidades').then(r => setUnidades(r.data)).catch(() => {})
+    api.get('/unidades?limit=1000').then(r => setUnidades(r.data.unidades || [])).catch(() => {})
     if (usuario?.id && usuario.role === 'TERCEIRO') {
       api.get(`/usuarios/${usuario.id}/unidades`).then(r => setUnidadesSelecionadas(new Set(r.data.map(u => u.id)))).catch(() => {})
     }
