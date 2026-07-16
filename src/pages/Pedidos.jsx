@@ -17,6 +17,83 @@ const Badge = ({ status }) => {
 const segmentoLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Reforma' }
 const segmentoCor = { LOJA: { bg: '#EEF2FF', color: '#3730A3' }, OBRA: { bg: '#FEF9C3', color: '#854D0E' }, EXPANSAO: { bg: '#F0FDF4', color: '#166534' } }
 
+const calcFim = (inicio) => {
+  if (!inicio) return ''
+  const [h, m] = inicio.split(':').map(Number)
+  const totalMin = h * 60 + m + 12 * 60
+  const fimH = Math.floor(totalMin / 60) % 24
+  const fimM = totalMin % 60
+  return `${String(fimH).padStart(2, '0')}:${String(fimM).padStart(2, '0')}`
+}
+
+const ModalEditar = ({ pedido, onClose, onSalvo }) => {
+  const [segmento, setSegmento] = useState(pedido.segmento)
+  const [inicio, setInicio] = useState(pedido.turno === 'DIA' ? pedido.inicioTurnoDia : pedido.inicioTurnoNoite)
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const fim = calcFim(inicio)
+  const campoInicio = pedido.turno === 'DIA' ? 'inicioTurnoDia' : 'inicioTurnoNoite'
+  const campoFim = pedido.turno === 'DIA' ? 'fimTurnoDia' : 'fimTurnoNoite'
+
+  const salvar = async () => {
+    setErro('')
+    setSalvando(true)
+    try {
+      await api.patch(`/pedidos/${pedido.id}`, { segmento, [campoInicio]: inicio, [campoFim]: fim })
+      onSalvo()
+    } catch (err) {
+      setErro(err.response?.data?.erro || 'Erro ao salvar alterações')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 440 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Editar pedido</h2>
+        <div style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>{pedido.unidade?.nome} — {new Date(pedido.data).toLocaleDateString('pt-BR')}</div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: '#555', display: 'block', marginBottom: 6 }}>Segmento</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['LOJA', 'OBRA', 'EXPANSAO'].map(seg => (
+              <button key={seg} type="button" onClick={() => setSegmento(seg)}
+                style={{ flex: 1, padding: '8px', borderRadius: 8, border: `2px solid ${segmento === seg ? '#0F6E56' : '#ddd'}`, background: segmento === seg ? '#E8F5F1' : '#fff', color: segmento === seg ? '#0F6E56' : '#555', fontSize: 13, fontWeight: segmento === seg ? 600 : 400, cursor: 'pointer' }}>
+                {seg === 'EXPANSAO' ? 'Reforma' : seg.charAt(0) + seg.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Início do turno ({pedido.turno === 'DIA' ? 'dia' : 'noite'})</label>
+            <input type="time" value={inicio} onChange={e => setInicio(e.target.value)}
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Término (automático)</label>
+            <input type="time" value={fim} readOnly
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, background: '#F9FAFB', color: '#555' }} />
+          </div>
+        </div>
+
+        {erro && <div style={{ background: '#FCEBEB', color: '#501313', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#666' }}>Cancelar</button>
+          <button onClick={salvar} disabled={salvando}
+            style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: '#0F6E56', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            {salvando ? 'Salvando...' : 'Salvar alterações'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const ModalLink = ({ pedido, onClose }) => {
   const [linksGerados, setLinksGerados] = useState({})
   const [gerando, setGerando] = useState('')
@@ -143,8 +220,8 @@ const ModalHistorico = ({ pedidoId, onClose }) => {
       .finally(() => setCarregando(false))
   }, [pedidoId])
 
-  const acaoCor = { CRIADO: '#0F6E56', CONFIRMADO: '#085041', CANCELADO: '#E24B4A', PENDENTE: '#BA7517' }
-  const acaoLabel = { CRIADO: 'CRIADO', CONFIRMADO: 'CONFIRMADO', CANCELADO: 'RECUSADO', PENDENTE: 'PENDENTE' }
+  const acaoCor = { CRIADO: '#0F6E56', CONFIRMADO: '#085041', CANCELADO: '#E24B4A', PENDENTE: '#BA7517', EDITADO: '#3730A3' }
+  const acaoLabel = { CRIADO: 'CRIADO', CONFIRMADO: 'CONFIRMADO', CANCELADO: 'RECUSADO', PENDENTE: 'PENDENTE', EDITADO: 'EDITADO' }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
@@ -195,6 +272,7 @@ export default function Pedidos() {
   const [modalCancelar, setModalCancelar] = useState(null)
   const [modalLink, setModalLink] = useState(null)
   const [modalHistorico, setModalHistorico] = useState(null)
+  const [modalEditar, setModalEditar] = useState(null)
   const [confirmandoTodos, setConfirmandoTodos] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -404,6 +482,12 @@ export default function Pedidos() {
                         </button>
                       )}
                       {p.status !== 'CANCELADO' && (
+                        <button onClick={() => setModalEditar(p)}
+                          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: 12, cursor: 'pointer' }}>
+                          Editar
+                        </button>
+                      )}
+                      {p.status !== 'CANCELADO' && (
                         <button onClick={() => setModalCancelar(p)}
                           style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #FCA5A5', background: '#FEF2F2', color: '#991B1B', fontSize: 12, cursor: 'pointer' }}>
                           Recusar
@@ -433,6 +517,7 @@ export default function Pedidos() {
       {modalCancelar && <ModalCancelar pedido={modalCancelar} onClose={() => setModalCancelar(null)} onCancelado={() => { setModalCancelar(null); carregar() }} />}
       {modalHistorico && <ModalHistorico pedidoId={modalHistorico} onClose={() => setModalHistorico(null)} />}
       {modalLink && <ModalLink pedido={modalLink} onClose={() => setModalLink(null)} />}
+      {modalEditar && <ModalEditar pedido={modalEditar} onClose={() => setModalEditar(null)} onSalvo={() => { setModalEditar(null); carregar() }} />}
     </div>
   )
 }

@@ -177,7 +177,7 @@ export default function Folha() {
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Folha de pagamento</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Financeiro</h1>
           <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>Calculado por horas trabalhadas — check-ins confirmados</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>

@@ -8,7 +8,7 @@ const navItems = [
   { to: '/unidades',  label: 'Unidades' },
   { to: '/usuarios',  label: 'Usuários' },
   { to: '/relatorio', label: 'Relatório' },
-  { to: '/folha',     label: 'Folha de pagamento' },
+  { to: '/folha',     label: 'Financeiro' },
 ]
 
 export default function Layout() {
