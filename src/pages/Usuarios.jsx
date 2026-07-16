@@ -135,6 +135,7 @@ export default function Usuarios() {
   const [carregando, setCarregando] = useState(true)
   const [busca, setBusca] = useState('')
   const [filtroRole, setFiltroRole] = useState('')
+  const [mostrarInativos, setMostrarInativos] = useState(false)
   const [modal, setModal] = useState(null)
 
   const excluir = async (id, nome) => {
@@ -156,8 +157,10 @@ export default function Usuarios() {
   const filtrados = usuarios.filter(u => {
     const matchBusca = u.nome.toLowerCase().includes(busca.toLowerCase()) || u.email.toLowerCase().includes(busca.toLowerCase())
     const matchRole = !filtroRole || u.role === filtroRole
-    return matchBusca && matchRole
+    const matchAtivo = mostrarInativos || u.ativo
+    return matchBusca && matchRole && matchAtivo
   })
+  const inativos = usuarios.filter(u => !u.ativo).length
 
   return (
     <div>
@@ -187,6 +190,12 @@ export default function Usuarios() {
           <option value="VIGIA">Vigia</option>
           <option value="TERCEIRO">Terceiro</option>
         </select>
+        {inativos > 0 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#666', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+            <input type="checkbox" checked={mostrarInativos} onChange={e => setMostrarInativos(e.target.checked)} />
+            Mostrar inativos ({inativos})
+          </label>
+        )}
       </div>
 
       {/* Tabela */}
