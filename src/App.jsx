@@ -18,6 +18,11 @@ const RotaProtegida = ({ children }) => {
   return usuario ? children : <Navigate to="/login" replace />
 }
 
+const PainelInicial = () => {
+  const { usuario } = useAuth()
+  return usuario?.role === 'TERCEIRO' ? <Navigate to="/pedidos" replace /> : <Dashboard />
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -26,7 +31,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/ponto/:token" element={<PontoLink />} />
           <Route path="/" element={<RotaProtegida><Layout /></RotaProtegida>}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<PainelInicial />} />
             <Route path="pedidos" element={<Pedidos />} />
             <Route path="pedidos/novo" element={<NovoPedido />} />
             <Route path="pontos" element={<Pontos />} />

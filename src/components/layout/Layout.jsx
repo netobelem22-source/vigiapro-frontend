@@ -16,7 +16,8 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const handleLogout = () => { logout(); navigate('/login') }
-  const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigia' }
+  const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigia', TERCEIRO: 'Terceiro' }
+  const itensMenu = usuario?.role === 'TERCEIRO' ? navItems.filter(i => i.to === '/pedidos') : navItems
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F6FA', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
@@ -36,7 +37,7 @@ export default function Layout() {
         </div>
         <nav style={{ flex: 1, padding: '12px 10px', overflowY: 'auto' }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: '#bbb', padding: '4px 10px 8px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Menu</div>
-          {navItems.map(item => {
+          {itensMenu.map(item => {
             const active = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
             return (
               <NavLink key={item.to} to={item.to} end={item.to === '/'}

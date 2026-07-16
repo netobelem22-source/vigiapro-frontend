@@ -1,34 +1,57 @@
 import { useState, useEffect } from 'react'
 import api from '../services/api'
 
-const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigilante' }
+const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigilante', TERCEIRO: 'Terceiro' }
 const roleBadge = {
-  GESTOR:  { bg: '#EEEDFE', color: '#26215C' },
-  GERENTE: { bg: '#E6F1FB', color: '#185FA5' },
-  VIGIA:   { bg: '#E8F5F1', color: '#085041' },
+  GESTOR:   { bg: '#EEEDFE', color: '#26215C' },
+  GERENTE:  { bg: '#E6F1FB', color: '#185FA5' },
+  VIGIA:    { bg: '#E8F5F1', color: '#085041' },
+  TERCEIRO: { bg: '#FDF0E3', color: '#8A4B10' },
 }
 
 const Modal = ({ usuario, onClose, onSaved }) => {
   const [form, setForm] = useState(usuario || { nome: '', email: '', senha: '', role: 'VIGIA', telefone: '', unidadeId: '', ativo: true })
   const [unidades, setUnidades] = useState([])
+  const [unidadesSelecionadas, setUnidadesSelecionadas] = useState(new Set())
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
   useEffect(() => {
     api.get('/unidades').then(r => setUnidades(r.data)).catch(() => {})
+    if (usuario?.id && usuario.role === 'TERCEIRO') {
+      api.get(`/usuarios/${usuario.id}/unidades`).then(r => setUnidadesSelecionadas(new Set(r.data.map(u => u.id)))).catch(() => {})
+    }
   }, [])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const toggleUnidade = (id) => setUnidadesSelecionadas(prev => {
+    const next = new Set(prev)
+    if (next.has(id)) next.delete(id); else next.add(id)
+    return next
+  })
+
+  const sincronizarUnidadesTerceiro = async (usuarioId) => {
+    const atuais = usuario?.id ? new Set((await api.get(`/usuarios/${usuarioId}/unidades`)).data.map(u => u.id)) : new Set()
+    const adicionar = [...unidadesSelecionadas].filter(id => !atuais.has(id))
+    const remover = [...atuais].filter(id => !unidadesSelecionadas.has(id))
+    await Promise.all([
+      ...adicionar.map(unidadeId => api.post(`/usuarios/${usuarioId}/unidades`, { unidadeId })),
+      ...remover.map(unidadeId => api.delete(`/usuarios/${usuarioId}/unidades/${unidadeId}`))
+    ])
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErro('')
     setSalvando(true)
     try {
-      const data = { ...form, unidadeId: form.unidadeId || null }
+      const data = { ...form, unidadeId: form.role === 'TERCEIRO' ? null : (form.unidadeId || null) }
       if (!data.senha) delete data.senha
-      if (usuario?.id) await api.put(`/usuarios/${usuario.id}`, data)
-      else await api.post('/usuarios', data)
+      let usuarioId = usuario?.id
+      if (usuarioId) await api.put(`/usuarios/${usuarioId}`, data)
+      else usuarioId = (await api.post('/usuarios', data)).data.id
+      if (form.role === 'TERCEIRO') await sincronizarUnidadesTerceiro(usuarioId)
       onSaved()
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao salvar')
@@ -65,17 +88,35 @@ const Modal = ({ usuario, onClose, onSaved }) => {
                 <option value="VIGIA">Vigilante</option>
                 <option value="GERENTE">Gerente</option>
                 <option value="GESTOR">Gestor</option>
+                <option value="TERCEIRO">Terceiro (acesso limitado)</option>
               </select>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidade</label>
-              <select value={form.unidadeId || ''} onChange={e => set('unidadeId', e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
-                <option value="">Sem unidade</option>
-                {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
-              </select>
-            </div>
+            {form.role !== 'TERCEIRO' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidade</label>
+                <select value={form.unidadeId || ''} onChange={e => set('unidadeId', e.target.value)}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
+                  <option value="">Sem unidade</option>
+                  {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
+                </select>
+              </div>
+            )}
           </div>
+          {form.role === 'TERCEIRO' && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidades que este terceiro pode atender</label>
+              <div style={{ marginTop: 6, maxHeight: 160, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 8, padding: 8 }}>
+                {unidades.length === 0 && <div style={{ fontSize: 12, color: '#999' }}>Nenhuma unidade cadastrada.</div>}
+                {unidades.map(u => (
+                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px', fontSize: 13, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={unidadesSelecionadas.has(u.id)} onChange={() => toggleUnidade(u.id)} />
+                    {u.nome} — {u.cidade}
+                  </label>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>{unidadesSelecionadas.size} unidade(s) selecionada(s)</div>
+            </div>
+          )}
           {erro && <div style={{ background: '#FCEBEB', color: '#501313', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 10 }}>{erro}</div>}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
@@ -143,6 +184,7 @@ export default function Usuarios() {
           <option value="GESTOR">Gestor</option>
           <option value="GERENTE">Gerente</option>
           <option value="VIGIA">Vigia</option>
+          <option value="TERCEIRO">Terceiro</option>
         </select>
       </div>
 
