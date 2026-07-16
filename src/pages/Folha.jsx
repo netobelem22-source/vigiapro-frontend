@@ -10,7 +10,7 @@ const fmtH = (h) => {
 }
 const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const segmentos = ['LOJA', 'OBRA', 'EXPANSAO']
-const segLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Expansão' }
+const segLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Reforma' }
 const segCor = { LOJA: '#3730A3', OBRA: '#854D0E', EXPANSAO: '#166534' }
 const segBg = { LOJA: '#EEF2FF', OBRA: '#FEF9C3', EXPANSAO: '#F0FDF4' }
 
@@ -194,7 +194,7 @@ export default function Folha() {
             <option value="TODOS">Todos os segmentos</option>
             <option value="LOJA">Loja</option>
             <option value="OBRA">Obra</option>
-            <option value="EXPANSAO">Expansão</option>
+            <option value="EXPANSAO">Reforma</option>
           </select>
           <button onClick={exportarCSV}
             style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#0F6E56', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>

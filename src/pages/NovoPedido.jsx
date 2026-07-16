@@ -145,7 +145,7 @@ export default function NovoPedido() {
               <button key={seg} type="button"
                 onClick={() => set('segmento', seg)}
                 style={{ flex: 1, padding: '10px', borderRadius: 8, border: `2px solid ${form.segmento === seg ? '#0F6E56' : '#ddd'}`, background: form.segmento === seg ? '#E8F5F1' : '#fff', color: form.segmento === seg ? '#0F6E56' : '#555', fontSize: 13, fontWeight: form.segmento === seg ? 600 : 400, cursor: 'pointer' }}>
-                {seg === 'EXPANSAO' ? 'Expansão' : seg.charAt(0) + seg.slice(1).toLowerCase()}
+                {seg === 'EXPANSAO' ? 'Reforma' : seg.charAt(0) + seg.slice(1).toLowerCase()}
               </button>
             ))}
           </div>

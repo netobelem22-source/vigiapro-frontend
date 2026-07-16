@@ -14,7 +14,7 @@ const Badge = ({ status }) => {
   return <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>{s.label}</span>
 }
 
-const segmentoLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Expansão' }
+const segmentoLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Reforma' }
 const segmentoCor = { LOJA: { bg: '#EEF2FF', color: '#3730A3' }, OBRA: { bg: '#FEF9C3', color: '#854D0E' }, EXPANSAO: { bg: '#F0FDF4', color: '#166534' } }
 
 const ModalLink = ({ pedido, onClose }) => {
