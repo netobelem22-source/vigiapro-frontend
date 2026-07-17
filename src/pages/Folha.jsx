@@ -106,19 +106,13 @@ export default function Folha() {
   const carregar = async () => {
     setCarregando(true)
     try {
+      const r = await api.get(`/faturamento?mes=${mes}&ano=${ano}`)
       if (filtroSegmento !== 'TODOS') {
-        const r = await api.get(`/faturamento?mes=${mes}&ano=${ano}&segmento=${filtroSegmento}`)
-        setDadosTodos(r.data)
+        setDadosTodos(r.data.porSegmento[filtroSegmento])
         setDadosPorSegmento({})
       } else {
-        const [todos, loja, obra, expansao] = await Promise.all([
-          api.get(`/faturamento?mes=${mes}&ano=${ano}`),
-          api.get(`/faturamento?mes=${mes}&ano=${ano}&segmento=LOJA`),
-          api.get(`/faturamento?mes=${mes}&ano=${ano}&segmento=OBRA`),
-          api.get(`/faturamento?mes=${mes}&ano=${ano}&segmento=EXPANSAO`)
-        ])
-        setDadosTodos(todos.data)
-        setDadosPorSegmento({ LOJA: loja.data, OBRA: obra.data, EXPANSAO: expansao.data })
+        setDadosTodos(r.data.todos)
+        setDadosPorSegmento(r.data.porSegmento)
       }
     } catch (e) { console.error(e) }
     finally { setCarregando(false) }
