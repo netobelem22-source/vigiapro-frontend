@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import api from '../services/api'
 
 export default function Relatorio() {
-  const [pedidos, setPedidos] = useState([])
+  const [dados, setDados] = useState(null)
   const [carregando, setCarregando] = useState(true)
   const hoje = new Date()
   const [mes, setMes] = useState(hoje.getMonth() + 1)
@@ -10,39 +10,17 @@ export default function Relatorio() {
 
   useEffect(() => {
     setCarregando(true)
-    // Busca pedidos do mês inteiro
-    const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`
-    const fim = new Date(ano, mes, 0)
-    const fimStr = fim.toISOString().split('T')[0]
-
-    // Busca todos os dias do mês
-    api.get(`/pedidos?limit=500`)
-      .then(r => {
-        const todos = r.data.pedidos || []
-        const filtrados = todos.filter(p => {
-          const d = new Date(p.data)
-          return d.getMonth() + 1 === mes && d.getFullYear() === ano
-        })
-        setPedidos(filtrados)
-      })
+    api.get(`/pedidos/relatorio?mes=${mes}&ano=${ano}`)
+      .then(r => setDados(r.data))
       .catch(console.error)
       .finally(() => setCarregando(false))
   }, [mes, ano])
 
-  const totalVigiasDia = pedidos.reduce((s, p) => s + (p.qtdVigiaDia || 0), 0)
-  const totalVigiasNoite = pedidos.reduce((s, p) => s + (p.qtdVigiNoite || 0), 0)
-  const confirmados = pedidos.filter(p => p.status === 'CONFIRMADO').length
-  const pendentes = pedidos.filter(p => p.status === 'PENDENTE').length
-
-  // Agrupa por unidade
-  const porUnidade = pedidos.reduce((acc, p) => {
-    const nome = p.unidade?.nome || 'Sem unidade'
-    if (!acc[nome]) acc[nome] = { nome, cidade: p.unidade?.cidade, pedidos: 0, vigiasDia: 0, vigiasNoite: 0 }
-    acc[nome].pedidos++
-    acc[nome].vigiasDia += p.qtdVigiaDia || 0
-    acc[nome].vigiasNoite += p.qtdVigiNoite || 0
-    return acc
-  }, {})
+  const totalPedidos = dados?.total ?? 0
+  const totalVigiasDia = dados?.totalVigiasDia ?? 0
+  const totalVigiasNoite = dados?.totalVigiasNoite ?? 0
+  const confirmados = dados?.confirmados ?? 0
+  const porUnidade = dados?.porUnidade ?? []
 
   const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
@@ -66,7 +44,7 @@ export default function Relatorio() {
             onClick={() => {
               const linhas = [
                 ['Unidade', 'Cidade', 'Pedidos', 'Vigias Dia', 'Vigias Noite'],
-                ...Object.values(porUnidade).map(u => [u.nome, u.cidade, u.pedidos, u.vigiasDia, u.vigiasNoite])
+                ...porUnidade.map(u => [u.nome, u.cidade, u.pedidos, u.vigiasDia, u.vigiasNoite])
               ]
               const csv = linhas.map(l => l.join(';')).join('\n')
               const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -83,7 +61,7 @@ export default function Relatorio() {
       {/* Cards resumo */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
-          { label: 'Total de pedidos', valor: pedidos.length, sub: `${meses[mes-1]} ${ano}` },
+          { label: 'Total de pedidos', valor: totalPedidos, sub: `${meses[mes-1]} ${ano}` },
           { label: 'Confirmados', valor: confirmados, sub: 'pedidos aprovados', cor: '#0F6E56' },
           { label: 'Vigias (dia)', valor: totalVigiasDia, sub: 'escalamentos diurnos' },
           { label: 'Vigias (noite)', valor: totalVigiasNoite, sub: 'escalamentos noturnos' },
@@ -103,7 +81,7 @@ export default function Relatorio() {
         </div>
         {carregando ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#999' }}>Carregando...</div>
-        ) : Object.values(porUnidade).length === 0 ? (
+        ) : porUnidade.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#999', fontSize: 14 }}>
             Nenhum pedido encontrado para {meses[mes-1]} {ano}.
           </div>
@@ -117,7 +95,7 @@ export default function Relatorio() {
               </tr>
             </thead>
             <tbody>
-              {Object.values(porUnidade).sort((a,b) => b.pedidos - a.pedidos).map(u => (
+              {porUnidade.map(u => (
                 <tr key={u.nome} style={{ borderBottom: '1px solid #f0f0f0' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>

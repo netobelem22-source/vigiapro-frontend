@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import api from '../services/api'
+import Paginacao from '../components/Paginacao'
 
 const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigilante', TERCEIRO: 'Terceiro' }
 const roleBadge = {
@@ -134,9 +135,15 @@ export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [busca, setBusca] = useState('')
+  const [buscaAtiva, setBuscaAtiva] = useState('')
   const [filtroRole, setFiltroRole] = useState('')
   const [mostrarInativos, setMostrarInativos] = useState(false)
   const [modal, setModal] = useState(null)
+  const [pagina, setPagina] = useState(1)
+  const [paginas, setPaginas] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [totalInativos, setTotalInativos] = useState(0)
+  const paginaRef = useRef(1)
 
   const excluir = async (id, nome) => {
     if (!confirm(`Excluir o usuário "${nome}"? Esta ação não pode ser desfeita.`)) return
@@ -149,25 +156,51 @@ export default function Usuarios() {
 
   const carregar = () => {
     setCarregando(true)
-    api.get('/usuarios').then(r => setUsuarios(r.data)).catch(console.error).finally(() => setCarregando(false))
+    const params = new URLSearchParams()
+    if (buscaAtiva) params.append('busca', buscaAtiva)
+    if (filtroRole) params.append('role', filtroRole)
+    if (!mostrarInativos) params.append('ativo', 'true')
+    params.append('page', paginaRef.current)
+    params.append('limit', 24)
+    api.get(`/usuarios?${params}`)
+      .then(r => {
+        setUsuarios(r.data.usuarios || [])
+        setTotal(r.data.total ?? 0)
+        setPaginas(r.data.paginas ?? 1)
+        setPagina(r.data.pagina ?? 1)
+        setTotalInativos(r.data.totalInativos ?? 0)
+      })
+      .catch(console.error)
+      .finally(() => setCarregando(false))
   }
 
-  useEffect(() => { carregar() }, [])
+  // Debounce da busca: espera 350ms sem digitar antes de consultar o servidor
+  useEffect(() => {
+    const t = setTimeout(() => {
+      paginaRef.current = 1
+      setBuscaAtiva(busca)
+    }, 350)
+    return () => clearTimeout(t)
+  }, [busca])
 
-  const filtrados = usuarios.filter(u => {
-    const matchBusca = u.nome.toLowerCase().includes(busca.toLowerCase()) || u.email.toLowerCase().includes(busca.toLowerCase())
-    const matchRole = !filtroRole || u.role === filtroRole
-    const matchAtivo = mostrarInativos || u.ativo
-    return matchBusca && matchRole && matchAtivo
-  })
-  const inativos = usuarios.filter(u => !u.ativo).length
+  useEffect(() => {
+    paginaRef.current = 1
+  }, [filtroRole, mostrarInativos])
+
+  useEffect(() => { carregar() }, [buscaAtiva, filtroRole, mostrarInativos])
+
+  const irParaPagina = (pg) => {
+    paginaRef.current = pg
+    setPagina(pg)
+    carregar()
+  }
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111' }}>Usuários</h1>
-          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{usuarios.length} usuários cadastrados</div>
+          <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>{total} usuários cadastrados</div>
         </div>
         <button onClick={() => setModal('novo')}
           style={{ background: '#0F6E56', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
@@ -190,10 +223,10 @@ export default function Usuarios() {
           <option value="VIGIA">Vigia</option>
           <option value="TERCEIRO">Terceiro</option>
         </select>
-        {inativos > 0 && (
+        {(totalInativos > 0 || mostrarInativos) && (
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#666', whiteSpace: 'nowrap', cursor: 'pointer' }}>
             <input type="checkbox" checked={mostrarInativos} onChange={e => setMostrarInativos(e.target.checked)} />
-            Mostrar inativos ({inativos})
+            Mostrar inativos ({totalInativos})
           </label>
         )}
       </div>
@@ -202,12 +235,13 @@ export default function Usuarios() {
       <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, overflow: 'hidden' }}>
         {carregando ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#999' }}>Carregando...</div>
-        ) : filtrados.length === 0 ? (
+        ) : usuarios.length === 0 ? (
           <div style={{ padding: '3rem', textAlign: 'center', color: '#999', fontSize: 14 }}>
             Nenhum usuário encontrado.{' '}
             <span style={{ color: '#0F6E56', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setModal('novo')}>Cadastrar</span>
           </div>
         ) : (
+          <>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
@@ -217,7 +251,7 @@ export default function Usuarios() {
               </tr>
             </thead>
             <tbody>
-              {filtrados.map(u => (
+              {usuarios.map(u => (
                 <tr key={u.id} style={{ borderBottom: '1px solid #F5F6FA' }}
                   onMouseEnter={e => e.currentTarget.style.background = '#FAFAFA'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -258,6 +292,8 @@ export default function Usuarios() {
               ))}
             </tbody>
           </table>
+          <Paginacao pagina={pagina} paginas={paginas} total={total} onChange={irParaPagina} />
+          </>
         )}
       </div>
 

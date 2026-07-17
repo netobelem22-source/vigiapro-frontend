@@ -48,11 +48,11 @@ const ModalManual = ({ onClose, onSalvo }) => {
     const hoje = new Date().toISOString().split('T')[0]
     Promise.all([
       api.get(`/pedidos?data=${hoje}&status=CONFIRMADO&limit=200`),
-      api.get('/usuarios').catch(() => ({ data: [] }))
+      api.get('/usuarios?role=VIGIA&limit=1000').catch(() => ({ data: { usuarios: [] } }))
     ]).then(([rp, ru]) => {
       const lista = rp.data.pedidos || []
       setPedidos(lista)
-      setVigias(ru.data.filter(u => u.role === 'VIGIA'))
+      setVigias(ru.data.usuarios || [])
       if (lista.length > 0) setForm(f => ({ ...f, pedidoId: lista[0].id }))
     })
   }, [])

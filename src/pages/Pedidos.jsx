@@ -323,7 +323,9 @@ export default function Pedidos() {
     setConfirmandoTodos(true)
     try {
       const res = await api.post('/pedidos/confirmar-todos', { data: filtroData })
-      alert(`${res.data.confirmados} pedido(s) confirmado(s) com sucesso!`)
+      alert(res.data.limitado
+        ? `${res.data.confirmados} pedido(s) confirmado(s) — havia mais pendentes do que o limite por vez, filtre por data e repita para confirmar o restante.`
+        : `${res.data.confirmados} pedido(s) confirmado(s) com sucesso!`)
       carregar()
     } catch { alert('Erro ao confirmar pedidos') }
     finally { setConfirmandoTodos(false) }
