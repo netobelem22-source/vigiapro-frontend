@@ -45,14 +45,14 @@ export default function Login() {
             Controle total da sua operação de segurança
           </h1>
           <p style={{ fontSize: 14, opacity: 0.75, lineHeight: 1.7, marginBottom: '2rem' }}>
-            Gerencie pedidos de vigilantes, registros de check-in, relatórios e folha de pagamento em um único lugar.
+            Gerencie pedidos de vigilantes, registros de check-in, relatórios financeiros em um único lugar.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
               { icon: '▦', text: 'Painel em tempo real com custos do dia' },
               { icon: '✓', text: 'Check-in com GPS e foto' },
-              { icon: '◎', text: 'Folha de pagamento automática' },
+              { icon: '◎', text: 'Relatórios financeiros' },
             ].map(item => (
               <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.12)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flexShrink: 0 }}>
