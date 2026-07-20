@@ -289,10 +289,10 @@ export default function Pontos() {
                       if (p.tipo !== 'ENTRADA' || !p.pedido) return <span style={{ color: '#ccc', fontSize: 12 }}>—</span>
                       const previsto = p.pedido.turno === 'NOITE' ? p.pedido.inicioTurnoNoite : p.pedido.inicioTurnoDia
                       if (!previsto) return <span style={{ color: '#ccc', fontSize: 12 }}>—</span>
-                      const [h, m] = previsto.split(':').map(Number)
-                      const dataBase = new Date(p.horario)
-                      const esperado = new Date(dataBase)
-                      esperado.setHours(h, m, 0, 0)
+                      // Monta o horário esperado em horário de Brasília (fixo, sem horário de verão),
+                      // independente do fuso do navegador de quem está vendo a tela
+                      const diaBrasil = new Date(p.horario).toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
+                      const esperado = new Date(`${diaBrasil}T${previsto}:00-03:00`)
                       const diffMin = Math.round((new Date(p.horario) - esperado) / 60000)
                       if (Math.abs(diffMin) <= 5) return <span style={{ background: '#E8F5F1', color: '#085041', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>No horário</span>
                       if (diffMin > 5) return <span style={{ background: '#FCEBEB', color: '#991B1B', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>{diffMin}min atrasado</span>

@@ -459,8 +459,11 @@ export default function Pedidos() {
                       const horario = p.turno === 'NOITE' ? p.inicioTurnoNoite : p.inicioTurnoDia
                       let atrasado = false
                       if (horario && mesmoDia) {
+                        // Horário previsto em horário de Brasília (fixo), independente do fuso do navegador
+                        const diaBrasil = agora.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
                         const [h, m] = horario.split(':').map(Number)
-                        const prev = new Date(); prev.setHours(h, m + 15, 0)
+                        const prev = new Date(`${diaBrasil}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00-03:00`)
+                        prev.setMinutes(prev.getMinutes() + 15)
                         atrasado = agora > prev
                       }
                       const totalVagas = p.turno === 'DIA' ? (p.qtdVigiaDia||1) : p.turno === 'NOITE' ? (p.qtdVigiNoite||1) : (p.qtdVigiaDia||1)+(p.qtdVigiNoite||1)
