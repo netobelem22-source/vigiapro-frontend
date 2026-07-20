@@ -220,13 +220,15 @@ export default function Unidades() {
   const [pagina, setPagina] = useState(1)
   const [paginas, setPaginas] = useState(1)
   const [total, setTotal] = useState(0)
-  const [stats, setStats] = useState({ totalUnidades: 0, totalCidades: 0, semValor: 0 })
+  const [stats, setStats] = useState({ totalUnidades: 0, totalCidades: 0, semValor: 0, semGps: 0 })
+  const [filtroSemGps, setFiltroSemGps] = useState(false)
   const paginaRef = useRef(1)
 
   const carregar = () => {
     setCarregando(true)
     const params = new URLSearchParams()
     if (buscaAtiva) params.append('busca', buscaAtiva)
+    if (filtroSemGps) params.append('semGps', 'true')
     params.append('page', paginaRef.current)
     params.append('limit', 24)
     api.get(`/unidades?${params}`)
@@ -236,7 +238,7 @@ export default function Unidades() {
         setPaginas(r.data.paginas ?? 1)
         setPagina(r.data.pagina ?? 1)
         if (r.data.totalUnidades !== undefined) {
-          setStats({ totalUnidades: r.data.totalUnidades, totalCidades: r.data.totalCidades, semValor: r.data.semValor })
+          setStats({ totalUnidades: r.data.totalUnidades, totalCidades: r.data.totalCidades, semValor: r.data.semValor, semGps: r.data.semGps })
         }
       })
       .catch(console.error)
@@ -252,7 +254,9 @@ export default function Unidades() {
     return () => clearTimeout(t)
   }, [busca])
 
-  useEffect(() => { carregar() }, [buscaAtiva])
+  useEffect(() => { paginaRef.current = 1 }, [filtroSemGps])
+
+  useEffect(() => { carregar() }, [buscaAtiva, filtroSemGps])
 
   const irParaPagina = (pg) => {
     paginaRef.current = pg
@@ -260,7 +264,7 @@ export default function Unidades() {
     carregar()
   }
 
-  const { totalUnidades, totalCidades, semValor } = stats
+  const { totalUnidades, totalCidades, semValor, semGps } = stats
 
   return (
     <div>
@@ -285,6 +289,13 @@ export default function Unidades() {
         <div style={{ background: '#FAEEDA', border: '1px solid #FAC775', borderRadius: 10, padding: '10px 16px', marginBottom: 14, fontSize: 13, color: '#633806', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span><strong>{semValor} unidade(s)</strong> sem valor de diária configurado.</span>
           <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setModalGlobal(true)}>Definir valor global</span>
+        </div>
+      )}
+
+      {semGps > 0 && (
+        <div style={{ background: '#FCEBEB', border: '1px solid #F3A6A5', borderRadius: 10, padding: '10px 16px', marginBottom: 14, fontSize: 13, color: '#7A2020', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span><strong>{semGps} unidade(s)</strong> sem GPS configurado — check-ins feitos nelas são sempre marcados como inválidos.</span>
+          <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setFiltroSemGps(v => !v)}>{filtroSemGps ? 'Ver todas' : 'Ver essas unidades'}</span>
         </div>
       )}
 
