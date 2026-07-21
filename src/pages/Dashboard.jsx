@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
+import { hojeBrasil } from '../utils/data'
 
 const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -51,7 +52,7 @@ export default function Dashboard() {
 
   const carregar = useCallback(() => {
     const hoje = new Date()
-    const hojeStr = hoje.toISOString().split('T')[0]
+    const hojeStr = hojeBrasil()
     const labelDia = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
     const inicioDaSemana = new Date(hoje)
     inicioDaSemana.setDate(hoje.getDate() - hoje.getDay())

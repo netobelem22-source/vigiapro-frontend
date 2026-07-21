@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import api from '../services/api'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import Paginacao from '../components/Paginacao'
+import { hojeBrasil } from '../utils/data'
 
 const Badge = ({ status }) => {
   const map = {
@@ -45,7 +46,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
-    const hoje = new Date().toISOString().split('T')[0]
+    const hoje = hojeBrasil()
     Promise.all([
       api.get(`/pedidos?data=${hoje}&status=CONFIRMADO&limit=200`),
       api.get('/usuarios?role=VIGIA&limit=1000').catch(() => ({ data: { usuarios: [] } }))
@@ -149,7 +150,7 @@ const ModalManual = ({ onClose, onSalvo }) => {
 export default function Pontos() {
   const [pontos, setPontos] = useState([])
   const [carregando, setCarregando] = useState(true)
-  const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
+  const [filtroData, setFiltroData] = useState(hojeBrasil())
   const [filtroStatus, setFiltroStatus] = useState('')
   const [pagina, setPagina] = useState(1)
   const [total, setTotal] = useState(0)

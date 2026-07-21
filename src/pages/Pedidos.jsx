@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../services/api'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import Paginacao from '../components/Paginacao'
+import { hojeBrasil } from '../utils/data'
 
 const Badge = ({ status }) => {
   const map = {
@@ -262,7 +263,7 @@ const ModalHistorico = ({ pedidoId, onClose }) => {
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState([])
   const [carregando, setCarregando] = useState(true)
-  const [filtroData, setFiltroData] = useState(new Date().toISOString().split('T')[0])
+  const [filtroData, setFiltroData] = useState(hojeBrasil())
   const [filtroStatus, setFiltroStatus] = useState('')
   const [filtroCidade, setFiltroCidade] = useState('')
   const [pagina, setPagina] = useState(1)

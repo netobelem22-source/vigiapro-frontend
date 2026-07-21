@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { hojeBrasil } from '../utils/data'
 
 const calcFim = (inicio) => {
   if (!inicio) return ''
@@ -16,8 +17,8 @@ export default function NovoPedido() {
   const [unidades, setUnidades] = useState([])
   const [form, setForm] = useState({
     unidadeId: '',
-    dataInicio: new Date().toISOString().split('T')[0],
-    dataFim: new Date().toISOString().split('T')[0],
+    dataInicio: hojeBrasil(),
+    dataFim: hojeBrasil(),
     usarPeriodo: false,
     segmento: 'LOJA',
     turno: 'NOITE',
