@@ -75,7 +75,8 @@ export default function Login() {
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '1.2rem' }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#444', marginBottom: 6 }}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              <input type="email" name="email" id="email" autoComplete="username"
+                value={email} onChange={e => setEmail(e.target.value)}
                 placeholder="seu@email.com" required
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, boxSizing: 'border-box', outline: 'none', transition: 'border 0.2s' }}
                 onFocus={e => e.target.style.borderColor = '#0F6E56'}
@@ -84,7 +85,8 @@ export default function Login() {
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#444', marginBottom: 6 }}>Senha</label>
-              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
+              <input type="password" name="senha" id="senha" autoComplete="current-password"
+                value={senha} onChange={e => setSenha(e.target.value)}
                 placeholder="••••••••" required
                 style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, boxSizing: 'border-box', outline: 'none', transition: 'border 0.2s' }}
                 onFocus={e => e.target.style.borderColor = '#0F6E56'}
