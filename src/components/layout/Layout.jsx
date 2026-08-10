@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useLembretePendencias } from '../../hooks/useLembretePendencias'
 
 const navItems = [
   { to: '/',          label: 'Painel' },
@@ -18,6 +19,7 @@ export default function Layout() {
   const handleLogout = () => { logout(); navigate('/login') }
   const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigia', TERCEIRO: 'Terceiro' }
   const itensMenu = usuario?.role === 'TERCEIRO' ? navItems.filter(i => i.to === '/pedidos') : navItems
+  useLembretePendencias(['GESTOR', 'GERENTE', 'TERCEIRO'].includes(usuario?.role))
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#F5F6FA', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
