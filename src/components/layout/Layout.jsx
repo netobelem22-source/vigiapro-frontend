@@ -17,7 +17,7 @@ const navItems = [
 const ToastPendencias = ({ pedidosPendentes, pontosAbertos, onFechar }) => {
   const navigate = useNavigate()
   const partes = []
-  if (pedidosPendentes > 0) partes.push(`${pedidosPendentes} pedido(s) pendente(s)`)
+  if (pedidosPendentes > 0) partes.push(`${pedidosPendentes} pedido(s) pendente(s) nas próximas 24h`)
   if (pontosAbertos > 0) partes.push(`${pontosAbertos} check-in(s) aguardando confirmação`)
 
   return (
