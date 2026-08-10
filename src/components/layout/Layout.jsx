@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLembretePendencias } from '../../hooks/useLembretePendencias'
+import { pararLembrete } from '../../utils/som'
 
 const navItems = [
   { to: '/',          label: 'Painel' },
@@ -57,7 +58,7 @@ export default function Layout() {
   useEffect(() => {
     if (alertaVersao === 0) return
     setMostrarToast(true)
-    const t = setTimeout(() => setMostrarToast(false), 12000)
+    const t = setTimeout(() => setMostrarToast(false), 15000)
     return () => clearTimeout(t)
   }, [alertaVersao])
 
@@ -116,7 +117,7 @@ export default function Layout() {
         <Outlet />
       </main>
       {mostrarToast && (pedidosPendentes > 0 || pontosAbertos > 0) && (
-        <ToastPendencias pedidosPendentes={pedidosPendentes} pontosAbertos={pontosAbertos} onFechar={() => setMostrarToast(false)} />
+        <ToastPendencias pedidosPendentes={pedidosPendentes} pontosAbertos={pontosAbertos} onFechar={() => { setMostrarToast(false); pararLembrete() }} />
       )}
     </div>
   )
