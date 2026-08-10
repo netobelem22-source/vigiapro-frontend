@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [lembrar, setLembrar] = useState(false)
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
   const { login } = useAuth()
@@ -15,7 +16,7 @@ export default function Login() {
     setErro('')
     setCarregando(true)
     try {
-      await login(email, senha)
+      await login(email, senha, lembrar)
       navigate('/')
     } catch (err) {
       setErro(err.response?.data?.erro || 'Email ou senha incorretos')
@@ -89,6 +90,12 @@ export default function Login() {
                 onFocus={e => e.target.style.borderColor = '#0F6E56'}
                 onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
             </div>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1.2rem', cursor: 'pointer', userSelect: 'none' }}>
+              <input type="checkbox" checked={lembrar} onChange={e => setLembrar(e.target.checked)}
+                style={{ width: 16, height: 16, accentColor: '#0F6E56', cursor: 'pointer' }} />
+              <span style={{ fontSize: 13, color: '#555' }}>Lembrar de mim neste dispositivo</span>
+            </label>
 
             {erro && (
               <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#991B1B', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>

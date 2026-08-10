@@ -152,6 +152,8 @@ export default function Pontos() {
   const [carregando, setCarregando] = useState(true)
   const [filtroData, setFiltroData] = useState(hojeBrasil())
   const [filtroStatus, setFiltroStatus] = useState('')
+  const [filtroUnidade, setFiltroUnidade] = useState('')
+  const [unidades, setUnidades] = useState([])
   const [pagina, setPagina] = useState(1)
   const [total, setTotal] = useState(0)
   const [paginas, setPaginas] = useState(1)
@@ -159,11 +161,16 @@ export default function Pontos() {
   const [fotoModal, setFotoModal] = useState(null)
   const [modalManual, setModalManual] = useState(false)
 
+  useEffect(() => {
+    api.get('/unidades?limit=1000').then(r => setUnidades(r.data.unidades || [])).catch(() => {})
+  }, [])
+
   const carregar = () => {
     setCarregando(true)
     const params = new URLSearchParams()
     if (filtroData) params.append('data', filtroData)
     if (filtroStatus) params.append('status', filtroStatus)
+    if (filtroUnidade) params.append('unidadeId', filtroUnidade)
     params.append('page', paginaRef.current)
     params.append('limit', 20)
     api.get(`/pontos?${params}`)
@@ -181,9 +188,9 @@ export default function Pontos() {
   // Quando filtros mudam, volta pra página 1
   useEffect(() => {
     paginaRef.current = 1
-  }, [filtroData, filtroStatus])
+  }, [filtroData, filtroStatus, filtroUnidade])
 
-  useAutoRefresh(carregar, [filtroData, filtroStatus])
+  useAutoRefresh(carregar, [filtroData, filtroStatus, filtroUnidade])
 
   const irParaPagina = (pg) => {
     paginaRef.current = pg
@@ -233,8 +240,16 @@ export default function Pontos() {
             <option value="CONFIRMADO">Confirmado</option>
           </select>
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, color: '#888' }}>Unidade</label>
+          <select value={filtroUnidade} onChange={e => setFiltroUnidade(e.target.value)}
+            style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, maxWidth: 220 }}>
+            <option value="">Todas</option>
+            {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
+          </select>
+        </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <button onClick={() => { setFiltroData(''); setFiltroStatus('') }}
+          <button onClick={() => { setFiltroData(''); setFiltroStatus(''); setFiltroUnidade('') }}
             style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#666' }}>
             Limpar
           </button>

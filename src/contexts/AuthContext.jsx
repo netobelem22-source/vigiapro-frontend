@@ -8,12 +8,21 @@ export const AuthProvider = ({ children }) => {
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    // Verifica se é uma nova sessão do navegador
+    // Marcou "lembrar-me" no login: token fica em localStorage e sobrevive a novas sessões/abas
+    const tokenLembrado = localStorage.getItem('token')
+    if (tokenLembrado) {
+      api.get('/auth/me')
+        .then(res => setUsuario(res.data))
+        .catch(() => localStorage.removeItem('token'))
+        .finally(() => setCarregando(false))
+      return
+    }
+
+    // Sem "lembrar-me": verifica se é uma nova sessão do navegador
     const sessaoAtiva = sessionStorage.getItem('sessao_ativa')
     if (!sessaoAtiva) {
       // Nova sessão — limpa qualquer token antigo
       sessionStorage.clear()
-      localStorage.removeItem('token')
       sessionStorage.setItem('sessao_ativa', '1')
       setCarregando(false)
       return
@@ -30,16 +39,21 @@ export const AuthProvider = ({ children }) => {
     }
   }, [])
 
-  const login = async (email, senha) => {
+  const login = async (email, senha, lembrar = false) => {
     const res = await api.post('/auth/login', { email, senha })
-    sessionStorage.setItem('token', res.data.token)
-    sessionStorage.setItem('sessao_ativa', '1')
+    if (lembrar) {
+      localStorage.setItem('token', res.data.token)
+    } else {
+      sessionStorage.setItem('token', res.data.token)
+      sessionStorage.setItem('sessao_ativa', '1')
+    }
     setUsuario(res.data.usuario)
     return res.data.usuario
   }
 
   const logout = () => {
     sessionStorage.clear()
+    localStorage.removeItem('token')
     setUsuario(null)
   }
 
