@@ -211,6 +211,89 @@ const ModalCancelar = ({ pedido, onClose, onCancelado }) => {
   )
 }
 
+const ModalRecusarLote = ({ onClose, onRecusado }) => {
+  const [unidades, setUnidades] = useState([])
+  const [unidadeId, setUnidadeId] = useState('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
+  const [motivo, setMotivo] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  useEffect(() => {
+    api.get('/unidades?limit=1000').then(r => setUnidades(r.data.unidades || [])).catch(() => {})
+  }, [])
+
+  const podeEnviar = unidadeId && dataInicio && dataFim && motivo.trim().length >= 3
+
+  const enviar = async () => {
+    setErro('')
+    setSalvando(true)
+    try {
+      const res = await api.post('/pedidos/recusar-todos', { unidadeId, dataInicio, dataFim, motivo })
+      onRecusado(res.data)
+    } catch (err) {
+      setErro(err.response?.data?.erro || 'Erro ao recusar pedidos em lote')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: '1.8rem', width: 460 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Recusar pedidos em lote</h2>
+        <p style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.5 }}>
+          Recusa de uma vez todos os pedidos de uma unidade dentro de um período — útil quando o cliente encurta um contrato (ex: pediu 30 dias, mas só precisou de 10).
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidade</label>
+          <select value={unidadeId} onChange={e => setUnidadeId(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
+            <option value="">Selecione...</option>
+            {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
+          </select>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>De</label>
+            <input type="date" value={dataInicio} onChange={e => setDataInicio(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Até</label>
+            <input type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} min={dataInicio || undefined}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Motivo da recusa (vale para todos os pedidos do período)</label>
+          <textarea value={motivo} onChange={e => setMotivo(e.target.value)} rows={3}
+            placeholder="Ex: Cliente reduziu o contrato de 30 para 10 dias"
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, resize: 'vertical', fontFamily: 'inherit' }} />
+        </div>
+
+        <div style={{ background: '#FFF8F0', border: '1px solid #FAC775', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#633806' }}>
+          Só afeta pedidos dessa unidade e período que ainda não foram recusados. Pedidos recusados não entram no cálculo do Financeiro.
+        </div>
+
+        {erro && <div style={{ background: '#FCEBEB', color: '#501313', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{erro}</div>}
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#666' }}>Voltar</button>
+          <button onClick={enviar} disabled={salvando || !podeEnviar}
+            style={{ padding: '9px 20px', borderRadius: 8, border: 'none', background: !podeEnviar ? '#F3A6A5' : '#E24B4A', color: '#fff', fontSize: 13, fontWeight: 600, cursor: !podeEnviar ? 'not-allowed' : 'pointer' }}>
+            {salvando ? 'Recusando...' : 'Recusar pedidos do período'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const ModalHistorico = ({ pedidoId, onClose }) => {
   const [historico, setHistorico] = useState([])
   const [carregando, setCarregando] = useState(true)
@@ -274,6 +357,7 @@ export default function Pedidos() {
   const [modalLink, setModalLink] = useState(null)
   const [modalHistorico, setModalHistorico] = useState(null)
   const [modalEditar, setModalEditar] = useState(null)
+  const [modalRecusarLote, setModalRecusarLote] = useState(false)
   const [confirmandoTodos, setConfirmandoTodos] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -354,6 +438,10 @@ export default function Pedidos() {
               {confirmandoTodos ? 'Confirmando...' : `Confirmar todos (${pendentes})`}
             </button>
           )}
+          <button onClick={() => setModalRecusarLote(true)}
+            style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid #FCA5A5', background: '#fff', color: '#991B1B', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            Recusar em lote
+          </button>
           <button onClick={() => navigate('/pedidos/novo')}
             style={{ background: '#0F6E56', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             + Novo pedido
@@ -524,6 +612,18 @@ export default function Pedidos() {
       {modalHistorico && <ModalHistorico pedidoId={modalHistorico} onClose={() => setModalHistorico(null)} />}
       {modalLink && <ModalLink pedido={modalLink} onClose={() => setModalLink(null)} />}
       {modalEditar && <ModalEditar pedido={modalEditar} onClose={() => setModalEditar(null)} onSalvo={() => { setModalEditar(null); carregar() }} />}
+      {modalRecusarLote && (
+        <ModalRecusarLote
+          onClose={() => setModalRecusarLote(false)}
+          onRecusado={(dados) => {
+            setModalRecusarLote(false)
+            setSucesso(dados.recusados === 0
+              ? 'Nenhum pedido pendente encontrado nesse período/unidade.'
+              : `${dados.recusados} pedido(s) recusado(s)${dados.limitado ? ' (limite de 500 por vez — repita para o restante)' : ''}.`)
+            carregar()
+          }}
+        />
+      )}
     </div>
   )
 }
