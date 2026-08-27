@@ -11,48 +11,33 @@ const roleBadge = {
 }
 
 const Modal = ({ usuario, onClose, onSaved }) => {
-  const [form, setForm] = useState(usuario || { nome: '', email: '', senha: '', role: 'VIGIA', telefone: '', unidadeId: '', ativo: true })
+  const [form, setForm] = useState(usuario || { nome: '', email: '', senha: '', role: 'VIGIA', telefone: '', unidadeId: '', terceirizadaId: '', ativo: true })
   const [unidades, setUnidades] = useState([])
-  const [unidadesSelecionadas, setUnidadesSelecionadas] = useState(new Set())
+  const [terceirizadas, setTerceirizadas] = useState([])
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
 
   useEffect(() => {
     api.get('/unidades?limit=1000').then(r => setUnidades(r.data.unidades || [])).catch(() => {})
-    if (usuario?.id && usuario.role === 'TERCEIRO') {
-      api.get(`/usuarios/${usuario.id}/unidades`).then(r => setUnidadesSelecionadas(new Set(r.data.map(u => u.id)))).catch(() => {})
-    }
+    api.get('/terceirizadas').then(r => setTerceirizadas(r.data || [])).catch(() => {})
   }, [])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const toggleUnidade = (id) => setUnidadesSelecionadas(prev => {
-    const next = new Set(prev)
-    if (next.has(id)) next.delete(id); else next.add(id)
-    return next
-  })
-
-  const sincronizarUnidadesTerceiro = async (usuarioId) => {
-    const atuais = usuario?.id ? new Set((await api.get(`/usuarios/${usuarioId}/unidades`)).data.map(u => u.id)) : new Set()
-    const adicionar = [...unidadesSelecionadas].filter(id => !atuais.has(id))
-    const remover = [...atuais].filter(id => !unidadesSelecionadas.has(id))
-    await Promise.all([
-      ...adicionar.map(unidadeId => api.post(`/usuarios/${usuarioId}/unidades`, { unidadeId })),
-      ...remover.map(unidadeId => api.delete(`/usuarios/${usuarioId}/unidades/${unidadeId}`))
-    ])
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErro('')
+    if (form.role === 'TERCEIRO' && !form.terceirizadaId) return setErro('Selecione a empresa terceirizada')
     setSalvando(true)
     try {
-      const data = { ...form, unidadeId: form.role === 'TERCEIRO' ? null : (form.unidadeId || null) }
+      const data = {
+        ...form,
+        unidadeId: form.role === 'TERCEIRO' ? null : (form.unidadeId || null),
+        terceirizadaId: form.role === 'TERCEIRO' ? form.terceirizadaId : null
+      }
       if (!data.senha) delete data.senha
-      let usuarioId = usuario?.id
-      if (usuarioId) await api.put(`/usuarios/${usuarioId}`, data)
-      else usuarioId = (await api.post('/usuarios', data)).data.id
-      if (form.role === 'TERCEIRO') await sincronizarUnidadesTerceiro(usuarioId)
+      if (usuario?.id) await api.put(`/usuarios/${usuario.id}`, data)
+      else await api.post('/usuarios', data)
       onSaved()
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao salvar')
@@ -105,17 +90,15 @@ const Modal = ({ usuario, onClose, onSaved }) => {
           </div>
           {form.role === 'TERCEIRO' && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidades que este terceiro pode atender</label>
-              <div style={{ marginTop: 6, maxHeight: 160, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 8, padding: 8 }}>
-                {unidades.length === 0 && <div style={{ fontSize: 12, color: '#999' }}>Nenhuma unidade cadastrada.</div>}
-                {unidades.map(u => (
-                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px', fontSize: 13, cursor: 'pointer' }}>
-                    <input type="checkbox" checked={unidadesSelecionadas.has(u.id)} onChange={() => toggleUnidade(u.id)} />
-                    {u.nome} — {u.cidade}
-                  </label>
-                ))}
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Empresa terceirizada</label>
+              <select value={form.terceirizadaId || ''} onChange={e => set('terceirizadaId', e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, marginTop: 6, boxSizing: 'border-box' }}>
+                <option value="">Selecione...</option>
+                {terceirizadas.map(t => <option key={t.id} value={t.id}>{t.nome} — R$ {Number(t.valorHora).toFixed(2)}/h</option>)}
+              </select>
+              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                Esse login só vai enxergar os pedidos atribuídos a essa empresa, em qualquer unidade.
               </div>
-              <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>{unidadesSelecionadas.size} unidade(s) selecionada(s)</div>
             </div>
           )}
           {erro && <div style={{ background: '#FCEBEB', color: '#501313', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 10 }}>{erro}</div>}
@@ -270,7 +253,11 @@ export default function Usuarios() {
                     <span style={{ ...roleBadge[u.role], padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500 }}>{roleLabel[u.role]}</span>
                   </td>
                   <td style={{ padding: '12px 16px', color: '#666', fontSize: 12 }}>
-                    {u.unidade ? <div><div>{u.unidade.nome}</div><div style={{ color: '#aaa' }}>{u.unidade.cidade}</div></div> : <span style={{ color: '#ccc' }}>—</span>}
+                    {u.unidade
+                      ? <div><div>{u.unidade.nome}</div><div style={{ color: '#aaa' }}>{u.unidade.cidade}</div></div>
+                      : u.terceirizada
+                        ? <div>{u.terceirizada.nome}<div style={{ color: '#aaa' }}>R$ {Number(u.terceirizada.valorHora).toFixed(2)}/h</div></div>
+                        : <span style={{ color: '#ccc' }}>—</span>}
                   </td>
                   <td style={{ padding: '12px 16px', color: '#666' }}>{u.telefone || <span style={{ color: '#ccc' }}>—</span>}</td>
                   <td style={{ padding: '12px 16px' }}>
