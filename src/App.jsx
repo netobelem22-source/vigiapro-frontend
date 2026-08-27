@@ -8,6 +8,7 @@ import Pontos from './pages/Pontos'
 import Relatorio from './pages/Relatorio'
 import Unidades from './pages/Unidades'
 import Usuarios from './pages/Usuarios'
+import Terceirizadas from './pages/Terceirizadas'
 import Folha from './pages/Folha'
 import PontoLink from './pages/PontoLink'
 import Layout from './components/layout/Layout'
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="pedidos/novo" element={<NovoPedido />} />
             <Route path="pontos" element={<Pontos />} />
             <Route path="unidades" element={<Unidades />} />
+            <Route path="terceirizadas" element={<Terceirizadas />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="relatorio" element={<Relatorio />} />
             <Route path="folha" element={<Folha />} />

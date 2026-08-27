@@ -30,8 +30,14 @@ const calcFim = (inicio) => {
 const ModalEditar = ({ pedido, onClose, onSalvo }) => {
   const [segmento, setSegmento] = useState(pedido.segmento)
   const [inicio, setInicio] = useState(pedido.turno === 'DIA' ? pedido.inicioTurnoDia : pedido.inicioTurnoNoite)
+  const [terceirizadaId, setTerceirizadaId] = useState(pedido.terceirizadaId || '')
+  const [terceirizadas, setTerceirizadas] = useState([])
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+
+  useEffect(() => {
+    api.get('/terceirizadas').then(r => setTerceirizadas(r.data || [])).catch(() => {})
+  }, [])
 
   const fim = calcFim(inicio)
   const campoInicio = pedido.turno === 'DIA' ? 'inicioTurnoDia' : 'inicioTurnoNoite'
@@ -39,9 +45,10 @@ const ModalEditar = ({ pedido, onClose, onSalvo }) => {
 
   const salvar = async () => {
     setErro('')
+    if (!terceirizadaId) return setErro('Selecione a empresa terceirizada')
     setSalvando(true)
     try {
-      await api.patch(`/pedidos/${pedido.id}`, { segmento, [campoInicio]: inicio, [campoFim]: fim })
+      await api.patch(`/pedidos/${pedido.id}`, { segmento, [campoInicio]: inicio, [campoFim]: fim, terceirizadaId })
       onSalvo()
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao salvar alterações')
@@ -79,6 +86,15 @@ const ModalEditar = ({ pedido, onClose, onSalvo }) => {
             <input type="time" value={fim} readOnly
               style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, background: '#F9FAFB', color: '#555' }} />
           </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 12, fontWeight: 500, color: '#555', display: 'block', marginBottom: 6 }}>Empresa terceirizada</label>
+          <select value={terceirizadaId} onChange={e => setTerceirizadaId(e.target.value)}
+            style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13, boxSizing: 'border-box' }}>
+            <option value="">Selecione...</option>
+            {terceirizadas.map(t => <option key={t.id} value={t.id}>{t.nome} — R$ {Number(t.valorHora).toFixed(2)}/h</option>)}
+          </select>
         </div>
 
         {erro && <div style={{ background: '#FCEBEB', color: '#501313', borderRadius: 8, padding: '8px 12px', fontSize: 12, marginBottom: 12 }}>{erro}</div>}
@@ -517,6 +533,9 @@ export default function Pedidos() {
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <td style={{ padding: '11px 14px' }}>
                     <div style={{ fontWeight: 500 }}>{p.unidade?.nome}</div>
+                    {p.terceirizada
+                      ? <div style={{ fontSize: 11, color: '#3730A3', marginTop: 2 }}>{p.terceirizada.nome}</div>
+                      : <div style={{ fontSize: 11, color: '#E24B4A', marginTop: 2 }}>Sem terceirizada</div>}
                     {p.observacao && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{p.observacao}</div>}
                   </td>
                   <td style={{ padding: '11px 14px', color: '#666' }}>{p.unidade?.cidade}</td>

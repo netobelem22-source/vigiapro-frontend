@@ -9,6 +9,7 @@ const navItems = [
   { to: '/pedidos',   label: 'Pedidos', badgeKey: 'pedidosPendentes' },
   { to: '/pontos',    label: 'Check-in', badgeKey: 'pontosAbertos' },
   { to: '/unidades',  label: 'Unidades' },
+  { to: '/terceirizadas', label: 'Terceirizada' },
   { to: '/usuarios',  label: 'Usuários' },
   { to: '/relatorio', label: 'Relatório' },
   { to: '/folha',     label: 'Financeiro' },

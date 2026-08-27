@@ -15,8 +15,10 @@ const calcFim = (inicio) => {
 
 export default function NovoPedido() {
   const [unidades, setUnidades] = useState([])
+  const [terceirizadas, setTerceirizadas] = useState([])
   const [form, setForm] = useState({
     unidadeId: '',
+    terceirizadaId: '',
     dataInicio: hojeBrasil(),
     dataFim: hojeBrasil(),
     usarPeriodo: false,
@@ -43,6 +45,7 @@ export default function NovoPedido() {
       if (usuario?.unidadeId) setForm(f => ({ ...f, unidadeId: usuario.unidadeId }))
       else if (lista.length > 0) setForm(f => ({ ...f, unidadeId: lista[0].id }))
     })
+    api.get('/terceirizadas').then(r => setTerceirizadas(r.data || [])).catch(() => {})
   }, [])
 
   const set = (campo, valor) => setForm(f => ({ ...f, [campo]: valor }))
@@ -74,6 +77,7 @@ export default function NovoPedido() {
     e.preventDefault()
     setErro('')
     if (!form.unidadeId) return setErro('Selecione uma unidade')
+    if (!form.terceirizadaId) return setErro('Selecione a empresa terceirizada')
     if (form.usarPeriodo && form.dataFim < form.dataInicio) return setErro('Data final deve ser maior que a inicial')
     setSalvando(true)
     try {
@@ -89,7 +93,8 @@ export default function NovoPedido() {
         fimTurnoDia: form.turno === 'DIA' ? form.fimTurnoDia : null,
         fimTurnoNoite: form.turno === 'NOITE' ? form.fimTurnoNoite : null,
         observacao: form.observacao,
-        unidadeId: form.unidadeId
+        unidadeId: form.unidadeId,
+        terceirizadaId: form.terceirizadaId
       }
       const res = await api.post('/pedidos', payload)
       navigate('/pedidos', { state: { sucesso: `${res.data.criados} pedido(s) criado(s) com sucesso!` } })
@@ -136,6 +141,24 @@ export default function NovoPedido() {
               <option value="">Selecione...</option>
               {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
             </select>
+          </div>
+        </div>
+
+        {/* Empresa terceirizada */}
+        <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, padding: '1.2rem', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#111' }}>Empresa terceirizada</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Qual empresa vai atender este pedido</label>
+            <select value={form.terceirizadaId} onChange={e => set('terceirizadaId', e.target.value)}
+              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
+              <option value="">Selecione...</option>
+              {terceirizadas.map(t => <option key={t.id} value={t.id}>{t.nome} — R$ {Number(t.valorHora).toFixed(2)}/h</option>)}
+            </select>
+            {terceirizadas.length === 0 && (
+              <div style={{ fontSize: 12, color: '#E24B4A', marginTop: 4 }}>
+                Nenhuma empresa terceirizada cadastrada ainda — cadastre em "Terceirizada" no menu antes de continuar.
+              </div>
+            )}
           </div>
         </div>
 
