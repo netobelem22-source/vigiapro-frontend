@@ -128,7 +128,7 @@ export default function Folha() {
     const rows = [
       [titulo],
       [],
-      ['Unidade', 'CNPJ', 'Cidade', 'Segmento', 'Vigilante', 'Data', 'Entrada', 'Saida', 'Horas', 'Valor/hora', 'Valor'],
+      ['Unidade', 'CNPJ', 'Cidade', 'Segmento', 'Empresa Terceirizada', 'Vigilante', 'Data', 'Entrada', 'Saida', 'Horas', 'Valor/hora', 'Valor'],
     ]
     for (const l of dadosTodos.linhas) {
       for (const d of (l.detalhes || [])) {
@@ -137,6 +137,7 @@ export default function Folha() {
           l.cnpj || '',
           l.cidade || '',
           d.segmento ? (segLabel[d.segmento] || d.segmento) : '',
+          d.terceirizada || '',
           d.vigia || '',
           d.data ? new Date(d.data + 'T12:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '',
           d.entrada || '',
@@ -149,7 +150,7 @@ export default function Folha() {
     }
     rows.push([])
     rows.push([
-      'TOTAL', '', '', '', '', '', '', '',
+      'TOTAL', '', '', '', '', '', '', '', '',
       (dadosTodos.totais?.totalHoras || 0).toFixed(2).replace('.', ','),
       '',
       (dadosTodos.totais?.valorTotal || 0).toFixed(2).replace('.', ','),
