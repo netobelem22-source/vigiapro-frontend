@@ -8,6 +8,9 @@ const fmtH = (h) => {
   const min = Math.round((h - horas) * 60)
   return `${horas}h${min > 0 ? `${min}min` : ''}`
 }
+// Total agregado do mês (casas na casa dos milhares) — minuto não ajuda a leitura nesse nível,
+// separador de milhar sim.
+const fmtHTotal = (h) => `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(h || 0)}h`
 const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const segmentos = ['LOJA', 'OBRA', 'EXPANSAO']
 const segLabel = { LOJA: 'Loja', OBRA: 'Obra', EXPANSAO: 'Reforma' }
@@ -84,7 +87,7 @@ const TabelaUnidades = ({ linhas, expandido, setExpandido, offset = 0 }) => (
       <tr style={{ background: '#F5F6FA', borderTop: '2px solid #EAECF0' }}>
         <td style={{ padding: '12px 16px', fontWeight: 700 }} colSpan={3}>SUBTOTAL</td>
         <td style={{ padding: '12px 16px', fontWeight: 600 }}>{linhas.reduce((s, l) => s + l.registros, 0)}</td>
-        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{fmtH(linhas.reduce((s, l) => s + l.totalHoras, 0))}</td>
+        <td style={{ padding: '12px 16px', fontWeight: 600 }}>{fmtHTotal(linhas.reduce((s, l) => s + l.totalHoras, 0))}</td>
         <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0F6E56', fontSize: 15 }}>{fmt(linhas.reduce((s, l) => s + l.valorTotal, 0))}</td>
         <td></td>
       </tr>
@@ -207,7 +210,7 @@ export default function Folha() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
         {[
           { label: 'Registros de check-in', valor: totais.registros, sub: 'pares entrada/saída confirmados' },
-          { label: 'Total horas', valor: fmtH(totais.totalHoras), sub: 'horas trabalhadas no mês' },
+          { label: 'Total horas', valor: fmtHTotal(totais.totalHoras), sub: 'horas trabalhadas no mês' },
           { label: 'Unidades', valor: dadosTodos?.linhas?.length || 0, sub: 'com registros no período' },
           { label: 'Valor total', valor: fmt(totais.valorTotal), sub: 'a faturar no mês', destaque: true },
         ].map(c => (
