@@ -51,7 +51,7 @@ export default function Layout() {
   const location = useLocation()
   const handleLogout = () => { logout(); navigate('/login') }
   const roleLabel = { GESTOR: 'Gestor', GERENTE: 'Gerente', VIGIA: 'Vigia', TERCEIRO: 'Terceiro' }
-  const itensMenu = usuario?.role === 'TERCEIRO' ? navItems.filter(i => i.to === '/pedidos') : navItems
+  const itensMenu = usuario?.role === 'TERCEIRO' ? navItems.filter(i => ['/pedidos', '/pontos'].includes(i.to)) : navItems
   const { pedidosPendentes, pontosAbertos, alertaVersao } = useLembretePendencias(['GESTOR', 'GERENTE', 'TERCEIRO'].includes(usuario?.role))
   const [mostrarToast, setMostrarToast] = useState(false)
 

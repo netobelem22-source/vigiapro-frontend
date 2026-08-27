@@ -3,6 +3,7 @@ import api from '../services/api'
 import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import Paginacao from '../components/Paginacao'
 import { hojeBrasil } from '../utils/data'
+import { useAuth } from '../contexts/AuthContext'
 
 const Badge = ({ status }) => {
   const map = {
@@ -148,6 +149,8 @@ const ModalManual = ({ onClose, onSalvo }) => {
 }
 
 export default function Pontos() {
+  const { usuario } = useAuth()
+  const somenteVisualizacao = usuario?.role === 'TERCEIRO'
   const [pontos, setPontos] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [filtroData, setFiltroData] = useState(hojeBrasil())
@@ -218,10 +221,12 @@ export default function Pontos() {
               <strong>{pendentes}</strong> aguardando confirmação
             </div>
           )}
-          <button onClick={() => setModalManual(true)}
-            style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-            + Registro manual
-          </button>
+          {!somenteVisualizacao && (
+            <button onClick={() => setModalManual(true)}
+              style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid #ddd', background: '#fff', color: '#555', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+              + Registro manual
+            </button>
+          )}
         </div>
       </div>
 
@@ -266,7 +271,7 @@ export default function Pontos() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#FAFAFA' }}>
-                {['Foto', 'Vigilante', 'Unidade', 'Tipo', 'Horário', 'Pontualidade', 'GPS', 'Confirmado por', 'Status', 'Ação'].map(h => (
+                {['Foto', 'Vigilante', 'Unidade', 'Tipo', 'Horário', 'Pontualidade', 'GPS', 'Confirmado por', 'Status', ...(somenteVisualizacao ? [] : ['Ação'])].map(h => (
                   <th key={h} style={{ padding: '9px 14px', textAlign: 'left', fontSize: 11, fontWeight: 500, color: '#888', borderBottom: '1px solid #EAECF0' }}>{h}</th>
                 ))}
               </tr>
@@ -333,14 +338,16 @@ export default function Pontos() {
                     ) : <span style={{ color: '#ccc' }}>—</span>}
                   </td>
                   <td style={{ padding: '10px 14px' }}><Badge status={p.status} /></td>
-                  <td style={{ padding: '10px 14px' }}>
-                    {p.status === 'ABERTO' && (
-                      <button onClick={() => confirmar(p.id)}
-                        style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #9FE1CB', background: '#E1F5EE', color: '#085041', fontSize: 12, cursor: 'pointer' }}>
-                        Confirmar
-                      </button>
-                    )}
-                  </td>
+                  {!somenteVisualizacao && (
+                    <td style={{ padding: '10px 14px' }}>
+                      {p.status === 'ABERTO' && (
+                        <button onClick={() => confirmar(p.id)}
+                          style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid #9FE1CB', background: '#E1F5EE', color: '#085041', fontSize: 12, cursor: 'pointer' }}>
+                          Confirmar
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
