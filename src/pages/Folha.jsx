@@ -131,7 +131,7 @@ export default function Folha() {
     const rows = [
       [titulo],
       [],
-      ['Unidade', 'CNPJ', 'Cidade', 'Segmento', 'Empresa Terceirizada', 'Vigilante', 'Data', 'Entrada', 'Saida', 'Horas', 'Valor/hora', 'Valor'],
+      ['Unidade', 'CNPJ', 'Cidade', 'Segmento', 'Empresa Terceirizada', 'Vigilante', 'Data', 'Entrada', 'Saida', 'Horas', 'Valor/hora', 'Valor', 'Observação'],
     ]
     for (const l of dadosTodos.linhas) {
       for (const d of (l.detalhes || [])) {
@@ -148,6 +148,7 @@ export default function Folha() {
           d.horas.toFixed(2).replace('.', ','),
           l.valorHora.toFixed(2).replace('.', ','),
           d.valor.toFixed(2).replace('.', ','),
+          d.observacao || '',
         ])
       }
     }
@@ -157,6 +158,7 @@ export default function Folha() {
       (dadosTodos.totais?.totalHoras || 0).toFixed(2).replace('.', ','),
       '',
       (dadosTodos.totais?.valorTotal || 0).toFixed(2).replace('.', ','),
+      '',
     ])
     const bom = '﻿'
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n')
