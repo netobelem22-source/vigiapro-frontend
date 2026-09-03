@@ -5,9 +5,9 @@ import { useEffect, useRef } from 'react'
  * 1. deps mudam (igual useEffect normal)
  * 2. usuário volta pra aba (visibilitychange)
  * 3. janela ganha foco (alt+tab de volta)
- * 4. a cada intervalMs com a aba aberta (padrão 60s)
+ * 4. a cada intervalMs com a aba aberta (padrão 5min)
  */
-export function useAutoRefresh(fn, deps = [], intervalMs = 60000) {
+export function useAutoRefresh(fn, deps = [], intervalMs = 300000) {
   const fnRef = useRef(fn)
   fnRef.current = fn
 
