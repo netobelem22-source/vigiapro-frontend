@@ -16,6 +16,9 @@ const calcFim = (inicio) => {
 export default function NovoPedido() {
   const [unidades, setUnidades] = useState([])
   const [terceirizadas, setTerceirizadas] = useState([])
+  const [multiUnidade, setMultiUnidade] = useState(false)
+  const [unidadeIds, setUnidadeIds] = useState([])
+  const [buscaUnidade, setBuscaUnidade] = useState('')
   const [form, setForm] = useState({
     unidadeId: '',
     terceirizadaId: '',
@@ -59,9 +62,13 @@ export default function NovoPedido() {
     set('fimTurnoNoite', calcFim(form.inicioTurnoNoite))
   }, [form.inicioTurnoNoite])
 
-  // Calcula preview de dias ao mudar datas
+  // Calcula preview de dias (e lojas, se aplicável) ao mudar datas/seleção
   useEffect(() => {
-    if (!form.usarPeriodo) { setPreview(null); return }
+    const lojas = multiUnidade ? unidadeIds.length : 1
+    if (!form.usarPeriodo) {
+      setPreview(lojas > 1 ? { dias: 1, lojas, totalPedidos: lojas } : null)
+      return
+    }
     if (!form.dataInicio || !form.dataFim) return
     const inicio = new Date(form.dataInicio + 'T12:00:00')
     const fim = new Date(form.dataFim + 'T12:00:00')
@@ -70,13 +77,15 @@ export default function NovoPedido() {
     const vigiasPorDia = form.turno === 'DIA'
       ? (parseInt(form.qtdVigiaDia) || 0)
       : (parseInt(form.qtdVigiNoite) || 0)
-    setPreview({ dias, vigiasPorDia, totalDiarias: dias * vigiasPorDia })
-  }, [form.dataInicio, form.dataFim, form.usarPeriodo, form.turno, form.qtdVigiaDia, form.qtdVigiNoite])
+    setPreview({ dias, lojas, vigiasPorDia, totalDiarias: dias * vigiasPorDia * lojas, totalPedidos: dias * lojas })
+  }, [form.dataInicio, form.dataFim, form.usarPeriodo, form.turno, form.qtdVigiaDia, form.qtdVigiNoite, multiUnidade, unidadeIds])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setErro('')
-    if (!form.unidadeId) return setErro('Selecione uma unidade')
+    if (multiUnidade) {
+      if (unidadeIds.length === 0) return setErro('Selecione ao menos uma unidade')
+    } else if (!form.unidadeId) return setErro('Selecione uma unidade')
     if (!form.terceirizadaId) return setErro('Selecione a empresa terceirizada')
     if (form.usarPeriodo && form.dataFim < form.dataInicio) return setErro('Data final deve ser maior que a inicial')
     setSalvando(true)
@@ -93,17 +102,26 @@ export default function NovoPedido() {
         fimTurnoDia: form.turno === 'DIA' ? form.fimTurnoDia : null,
         fimTurnoNoite: form.turno === 'NOITE' ? form.fimTurnoNoite : null,
         observacao: form.observacao,
-        unidadeId: form.unidadeId,
-        terceirizadaId: form.terceirizadaId
+        terceirizadaId: form.terceirizadaId,
+        ...(multiUnidade ? { unidadeIds } : { unidadeId: form.unidadeId })
       }
       const res = await api.post('/pedidos', payload)
-      navigate('/pedidos', { state: { sucesso: `${res.data.criados} pedido(s) criado(s) com sucesso!` } })
+      const sufixo = res.data.unidades > 1 ? ` em ${res.data.unidades} unidades` : ''
+      navigate('/pedidos', { state: { sucesso: `${res.data.criados} pedido(s) criado(s)${sufixo} com sucesso!` } })
     } catch (err) {
       setErro(err.response?.data?.erro || 'Erro ao salvar pedido')
     } finally {
       setSalvando(false)
     }
   }
+
+  const toggleUnidade = (id) => {
+    setUnidadeIds(cur => cur.includes(id) ? cur.filter(u => u !== id) : [...cur, id])
+  }
+
+  const unidadesFiltradas = unidades.filter(u =>
+    !buscaUnidade || u.nome.toLowerCase().includes(buscaUnidade.toLowerCase()) || u.cidade?.toLowerCase().includes(buscaUnidade.toLowerCase())
+  )
 
   const input = (label, campo, tipo = 'text', props = {}) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -132,16 +150,55 @@ export default function NovoPedido() {
 
         {/* Unidade */}
         <div style={{ background: '#fff', border: '1px solid #EAECF0', borderRadius: 12, padding: '1.2rem', marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#111' }}>Unidade</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidade</label>
-            <select value={form.unidadeId} onChange={e => set('unidadeId', e.target.value)}
-              disabled={usuario?.role === 'GERENTE'}
-              style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
-              <option value="">Selecione...</option>
-              {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
-            </select>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>Unidade</div>
+            {usuario?.role !== 'GERENTE' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#555' }}>
+                <input type="checkbox" checked={multiUnidade}
+                  onChange={e => { setMultiUnidade(e.target.checked); setUnidadeIds([]) }}
+                  style={{ width: 16, height: 16, accentColor: '#0F6E56' }} />
+                Solicitar para várias unidades
+              </label>
+            )}
           </div>
+
+          {multiUnidade ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input value={buscaUnidade} onChange={e => setBuscaUnidade(e.target.value)}
+                placeholder="Buscar por nome ou cidade..."
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
+              <div style={{ display: 'flex', gap: 10, fontSize: 12 }}>
+                <span style={{ color: '#0F6E56', cursor: 'pointer', fontWeight: 500 }}
+                  onClick={() => setUnidadeIds([...new Set([...unidadeIds, ...unidadesFiltradas.map(u => u.id)])])}>
+                  Selecionar {buscaUnidade ? 'filtradas' : 'todas'}
+                </span>
+                <span style={{ color: '#888', cursor: 'pointer' }} onClick={() => setUnidadeIds([])}>Limpar seleção</span>
+                <span style={{ color: '#aaa', marginLeft: 'auto' }}>{unidadeIds.length} selecionada(s)</span>
+              </div>
+              <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid #eee', borderRadius: 8 }}>
+                {unidadesFiltradas.length === 0 ? (
+                  <div style={{ padding: 14, fontSize: 13, color: '#999', textAlign: 'center' }}>Nenhuma unidade encontrada.</div>
+                ) : unidadesFiltradas.map(u => (
+                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid #F5F6FA', cursor: 'pointer', fontSize: 13 }}>
+                    <input type="checkbox" checked={unidadeIds.includes(u.id)} onChange={() => toggleUnidade(u.id)}
+                      style={{ width: 15, height: 15, accentColor: '#0F6E56' }} />
+                    <span style={{ color: '#111' }}>{u.nome}</span>
+                    <span style={{ color: '#999' }}>— {u.cidade}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Unidade</label>
+              <select value={form.unidadeId} onChange={e => set('unidadeId', e.target.value)}
+                disabled={usuario?.role === 'GERENTE'}
+                style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
+                <option value="">Selecione...</option>
+                {unidades.map(u => <option key={u.id} value={u.id}>{u.nome} — {u.cidade}</option>)}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Empresa terceirizada */}
@@ -192,28 +249,33 @@ export default function NovoPedido() {
             {form.usarPeriodo && input('Data fim', 'dataFim', 'date', { min: form.dataInicio })}
           </div>
 
-          {form.usarPeriodo && preview && (
-            <div style={{ marginTop: 12, background: '#E8F5F1', border: '1px solid #9FE1CB', borderRadius: 10, padding: '12px 14px' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#085041', marginBottom: 6 }}>Resumo do período</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>{preview.dias}</div>
-                  <div style={{ fontSize: 11, color: '#666' }}>dias</div>
+          {preview && (form.usarPeriodo || preview.lojas > 1) && (() => {
+            const cols = [
+              ...(form.usarPeriodo ? [{ v: preview.dias, l: 'dias' }] : []),
+              ...(preview.lojas > 1 ? [{ v: preview.lojas, l: 'lojas' }] : []),
+              ...(form.usarPeriodo ? [{ v: preview.vigiasPorDia, l: 'vigilantes/dia' }] : []),
+              { v: preview.totalPedidos, l: 'total de pedidos' }
+            ]
+            const mensagem = form.usarPeriodo && preview.lojas > 1
+              ? `Serão criados ${preview.totalPedidos} pedidos automaticamente — ${preview.dias} dia(s) para cada uma das ${preview.lojas} unidades.`
+              : form.usarPeriodo
+                ? `Serão criados ${preview.dias} pedidos automaticamente, um para cada dia do período.`
+                : `Será criado 1 pedido para cada uma das ${preview.lojas} unidades selecionadas.`
+            return (
+              <div style={{ marginTop: 12, background: '#E8F5F1', border: '1px solid #9FE1CB', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#085041', marginBottom: 6 }}>Resumo do pedido</div>
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols.length}, 1fr)`, gap: 8 }}>
+                  {cols.map(c => (
+                    <div key={c.l} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>{c.v}</div>
+                      <div style={{ fontSize: 11, color: '#666' }}>{c.l}</div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>{preview.vigiasPorDia}</div>
-                  <div style={{ fontSize: 11, color: '#666' }}>vigilantes/dia</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>{preview.totalDiarias}</div>
-                  <div style={{ fontSize: 11, color: '#666' }}>total diárias</div>
-                </div>
+                <div style={{ fontSize: 12, color: '#666', marginTop: 8, textAlign: 'center' }}>{mensagem}</div>
               </div>
-              <div style={{ fontSize: 12, color: '#666', marginTop: 8, textAlign: 'center' }}>
-                Serão criados <strong>{preview.dias} pedidos</strong> automaticamente, um para cada dia do período.
-              </div>
-            </div>
-          )}
+            )
+          })()}
         </div>
 
         {/* Escala */}
@@ -282,7 +344,7 @@ export default function NovoPedido() {
           </button>
           <button type="submit" disabled={salvando}
             style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: '#0F6E56', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {salvando ? 'Salvando...' : form.usarPeriodo && preview ? `Criar ${preview.dias} pedidos` : 'Confirmar pedido'}
+            {salvando ? 'Salvando...' : preview?.totalPedidos > 1 ? `Criar ${preview.totalPedidos} pedidos` : 'Confirmar pedido'}
           </button>
         </div>
       </form>
