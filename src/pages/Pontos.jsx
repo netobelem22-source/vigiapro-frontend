@@ -34,6 +34,7 @@ const ModalFoto = ({ url, onClose }) => (
 )
 
 const ModalManual = ({ onClose, onSalvo }) => {
+  const [dataPedido, setDataPedido] = useState(hojeBrasil())
   const [pedidos, setPedidos] = useState([])
   const [vigias, setVigias] = useState([])
   const [form, setForm] = useState({
@@ -47,17 +48,19 @@ const ModalManual = ({ onClose, onSalvo }) => {
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
-    const hoje = hojeBrasil()
-    Promise.all([
-      api.get(`/pedidos?data=${hoje}&status=CONFIRMADO&limit=200`),
-      api.get('/usuarios?role=VIGIA&limit=1000').catch(() => ({ data: { usuarios: [] } }))
-    ]).then(([rp, ru]) => {
-      const lista = rp.data.pedidos || []
-      setPedidos(lista)
-      setVigias(ru.data.usuarios || [])
-      if (lista.length > 0) setForm(f => ({ ...f, pedidoId: lista[0].id }))
-    })
+    api.get('/usuarios?role=VIGIA&limit=1000').then(r => setVigias(r.data.usuarios || [])).catch(() => setVigias([]))
   }, [])
+
+  useEffect(() => {
+    if (!dataPedido) return
+    api.get(`/pedidos?data=${dataPedido}&status=CONFIRMADO&limit=200`).then(r => {
+      const lista = r.data.pedidos || []
+      setPedidos(lista)
+      // Mantém a hora já digitada, só troca a data — sem isso é fácil esquecer de ajustar
+      // o campo de horário e salvar o registro manual no dia errado.
+      setForm(f => ({ ...f, pedidoId: lista[0]?.id || '', horario: `${dataPedido}T${f.horario.slice(11)}` }))
+    })
+  }, [dataPedido])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -97,10 +100,16 @@ const ModalManual = ({ onClose, onSalvo }) => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Pedido (hoje)</label>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Data do pedido</label>
+            <input type="date" value={dataPedido} onChange={e => setDataPedido(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: '#555' }}>Pedido</label>
             <select value={form.pedidoId} onChange={e => set('pedidoId', e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 13 }}>
-              <option value="">Selecione...</option>
+              <option value="">{pedidos.length === 0 ? 'Nenhum pedido confirmado nessa data' : 'Selecione...'}</option>
               {pedidos.map(p => <option key={p.id} value={p.id}>{p.unidade?.nome} — {p.turno}</option>)}
             </select>
           </div>
